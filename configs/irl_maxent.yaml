@@ -1,0 +1,39 @@
+# MaxEnt IRL (Ablation C — 제안 모델)
+# 학습 실행: python scripts/train.py --config configs/irl_maxent.yaml
+
+experiment:
+  name: irl_maxent
+  description: "MaxEnt IRL: EBM reward + OT-CFM flow matching"
+  type: irl                    # → train_irl() 호출
+
+data:
+  splits_dir: data/splits
+  patch_size: 48
+  batch_size: 32
+  num_workers: 4
+
+model:
+  type: irl
+  base_ch: 32
+
+ebm:
+  sgld_steps: 60
+  sgld_step_size: 10.0
+  sgld_noise_scale: 0.005
+  replay_buffer_size: 10000
+  replay_prob: 0.95
+
+training:
+  epochs: 200
+  reward_lr: 1.0e-4
+  fm_lr: 1.0e-4
+  weight_decay: 1.0e-5
+  l2_reg: 1.0
+  grad_clip: 1.0
+  reward_steps_per_iter: 5
+  fm_steps_per_iter: 10
+
+logging:
+  log_interval: 50
+  save_interval: 10
+  output_dir: outputs/irl_maxent

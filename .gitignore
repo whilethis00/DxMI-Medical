@@ -1,0 +1,25 @@
+# 데이터 (대용량, 재현 가능)
+data/processed/
+data/raw/
+
+# 출력물
+outputs/
+*.out
+*.err
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# 환경
+.env
+*.log

@@ -1,0 +1,37 @@
+# EBM Baseline (Ablation A — No IRL)
+# 학습 실행: python scripts/train.py --config configs/ebm_baseline.yaml
+
+experiment:
+  name: ebm_baseline
+  description: "EBM with contrastive divergence, no IRL reward shaping"
+
+data:
+  splits_dir: data/splits
+  patch_size: 48
+  batch_size: 32
+  num_workers: 4
+
+model:
+  type: ebm
+  base_ch: 32           # 채널 수 (32→64→128→256)
+
+ebm:
+  sgld_steps: 60        # SGLD negative sample steps
+  sgld_step_size: 10.0
+  sgld_noise_scale: 0.005
+  replay_buffer_size: 10000   # replay buffer (CD 안정화)
+  replay_prob: 0.95           # replay buffer에서 init할 확률
+
+training:
+  epochs: 200
+  lr: 1.0e-4
+  weight_decay: 1.0e-5
+  l2_reg: 1.0           # energy regularization
+  grad_clip: 1.0
+  scheduler: cosine     # cosine annealing
+  warmup_epochs: 5
+
+logging:
+  log_interval: 50      # steps
+  save_interval: 10     # epochs
+  output_dir: outputs/ebm_baseline
