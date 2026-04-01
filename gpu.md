@@ -4,6 +4,43 @@
 
 ---
 
+## 성공한 방법 요약 (2026-04-01)
+
+### 결론: qsub -I Qlist 없이 제출 → 자동 할당 대기 → A100 80GB 획득
+
+```bash
+# tmux 세션 생성
+tmux new-session -d -s gpu_job
+
+# 인터랙티브 잡 제출 (Qlist 없이!)
+tmux send-keys -t gpu_job \
+  "/opt/pbs/bin/qsub -I -q coss_agpu -l select=1:ncpus=6:mem=192g:ngpus=1 -l walltime=72:00:00" \
+  Enter
+
+# 할당 대기 (수 분) → "qsub: job 85850.ECE-util1 ready" 출력 후 GPU 노드 쉘 진입
+# → 자동으로 ece-agpu3 배정, NVIDIA A100-SXM4-80GB (80GB VRAM)
+
+# 훈련 실행 (Claude가 tmux send-keys로 순차 제어)
+tmux send-keys -t gpu_job "cd /home/introai26/.agile/user/hsjung/DxMI_Medical" Enter
+tmux send-keys -t gpu_job "mkdir -p outputs" Enter
+tmux send-keys -t gpu_job \
+  "CUDA_VISIBLE_DEVICES=0 /home/introai26/miniconda3/envs/dxmi_medical/bin/python scripts/train.py --config configs/ebm_baseline.yaml --device cuda 2>&1 | tee outputs/ebm_baseline_train.log" \
+  Enter
+```
+
+### 핵심 발견
+
+| 항목 | 내용 |
+|------|------|
+| 잡 ID | 85850 |
+| 노드 | ece-agpu3 |
+| GPU | NVIDIA A100-SXM4-80GB |
+| VRAM | 80GB (4 MiB만 사용 중, 거의 유휴) |
+| 할당 방법 | `Qlist=agpu` 없이 `-q coss_agpu` 만으로 제출 성공 |
+| 실패 원인 | `Qlist=agpu:container_engine=singularity` 리소스 접근 권한 없음 |
+
+---
+
 ## 시행착오 기록
 
 ### 실패 1: introai26으로 직접 coss_agpu 잡 제출
