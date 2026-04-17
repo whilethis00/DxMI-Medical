@@ -455,6 +455,7 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
         replay_buffer_size = cfg["ebm"]["replay_buffer_size"] // world_size(),
         replay_prob        = cfg["ebm"]["replay_prob"],
         l2_reg             = cfg["training"]["l2_reg"],
+        energy_clamp       = cfg["training"].get("energy_clamp", None),
         grad_clip          = cfg["training"]["grad_clip"],
         reward_steps_per_iter = cfg["training"].get("reward_steps_per_iter", 5),
         fm_steps_per_iter     = cfg["training"].get("fm_steps_per_iter", 10),

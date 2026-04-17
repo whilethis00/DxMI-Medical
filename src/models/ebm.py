@@ -108,6 +108,7 @@ def contrastive_divergence_loss(
     x_pos: torch.Tensor,
     x_neg: torch.Tensor,
     l2_reg: float = 1.0,
+    energy_clamp: float | None = None,
 ) -> tuple[torch.Tensor, dict]:
     """
     CD 손실: E(x+) - E(x-)  (minimize → lower energy for real data)
@@ -115,13 +116,20 @@ def contrastive_divergence_loss(
     Args:
         x_pos: (B, 1, 48, 48, 48) real patches
         x_neg: (B, 1, 48, 48, 48) SGLD-sampled negative patches
-        l2_reg: energy regularization weight
+        l2_reg: energy regularization weight — equilibrium |E| = 1/(2*l2_reg).
+                l2_reg=0.01 → ±50, l2_reg=0.1 → ±5, l2_reg=0.5 → ±1
+        energy_clamp: if set, clamp |E| to [-energy_clamp, energy_clamp] before loss.
+                      use only after l2_reg tuning fails to prevent numeric explosion.
 
     Returns:
         loss, metrics dict
     """
     e_pos = model(x_pos)
     e_neg = model(x_neg)
+
+    if energy_clamp is not None:
+        e_pos = e_pos.clamp(-energy_clamp, energy_clamp)
+        e_neg = e_neg.clamp(-energy_clamp, energy_clamp)
 
     cd_loss  = (e_pos - e_neg).mean()
     reg_loss = l2_reg * (e_pos ** 2 + e_neg ** 2).mean()

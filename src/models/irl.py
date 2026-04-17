@@ -35,7 +35,8 @@ class IRLConfig:
     reward_weight: float = 0.1
 
     # Regularization
-    l2_reg: float = 1.0
+    l2_reg: float = 1.0               # equilibrium |E| = 1/(2*l2_reg): 0.01→±50, 0.1→±5, 0.5→±1
+    energy_clamp: float | None = None  # hard clamp after l2_reg tuning; None = off
     grad_clip: float = 1.0
 
     # Gated hybrid negative strategy
@@ -239,7 +240,7 @@ class MaxEntIRL:
 
         # sep/std 계산 (현재 배치 기준)
         sep     = (e_pos.mean() - e_neg_fm.mean()).abs().item()
-        avg_std = (e_pos.std(unbiased=False).item() + e_neg_fm.std(unbiased=False).item()) / 2 + 1e-8
+        avg_std = (e_pos.std(unbiased=False).item() + e_neg_fm.std(unbiased=False).item()) / 2 + 1e-3
         sep_std = sep / avg_std
 
         # EMA 업데이트
@@ -316,6 +317,10 @@ class MaxEntIRL:
             self.reward_opt.zero_grad()
             e_pos = self.ebm(x_demo)
             e_neg = self.ebm(x_neg)
+
+            if self.cfg.energy_clamp is not None:
+                e_pos = e_pos.clamp(-self.cfg.energy_clamp, self.cfg.energy_clamp)
+                e_neg = e_neg.clamp(-self.cfg.energy_clamp, self.cfg.energy_clamp)
 
             cd_loss  = (e_pos - e_neg).mean()
             reg_loss = self.cfg.l2_reg * (e_pos ** 2 + e_neg ** 2).mean()

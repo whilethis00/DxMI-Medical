@@ -1,0 +1,64 @@
+# EBM collapse 진단 sweep — SGLD only, FM 비활성
+#
+# 목적: irl_minirun에서 step 20에 EBM이 ±50으로 붕괴한 원인 격리.
+#       FM 끄고 l2_reg만 바꿔가며 e_pos_std / e_neg_std가 살아남는 조건 확인.
+#
+# 합격 기준:
+#   e_pos_std > 0.5, e_neg_std > 0.5 (step 200 이후에도 유지)
+#   val Spearman이 epoch 10 이후 0에서 움직임
+#
+# 실행 (l2_reg 0.1 / 0.3 / 0.5 각각):
+#   이 파일에서 training.l2_reg 값을 바꾼 뒤:
+#   /home/introai26/miniconda3/envs/dxmi_medical/bin/python scripts/train.py \
+#       --config configs/ebm_collapse_sweep.yaml
+#
+# NOTE: fm_gate_sep_std_threshold=9999 → Phase 1(SGLD only) 강제 유지
+
+experiment:
+  name: ebm_collapse_sweep
+  description: "EBM collapse 격리 — SGLD only, l2_reg sweep (FM 비활성)"
+  type: irl
+
+data:
+  splits_dir: data/splits
+  patch_size: 48
+  batch_size: 4
+  num_workers: 4
+
+model:
+  type: irl
+  base_ch: 32
+
+ebm:
+  sgld_steps: 60
+  sgld_step_size: 0.01
+  sgld_noise_scale: 0.01
+  replay_buffer_size: 10000
+  replay_prob: 0.95
+
+training:
+  epochs: 20
+  reward_lr: 1.0e-4
+  fm_lr: 1.0e-4
+  weight_decay: 1.0e-5
+  l2_reg: 0.1                  # sweep: 0.1 / 0.3 / 0.5
+  energy_clamp: null            # l2_reg 조정 후에도 포화 시 10.0 시도
+  grad_clip: 1.0
+  reward_steps_per_iter: 3
+  fm_steps_per_iter: 10
+  policy_sample_steps: 32
+  policy_grad_steps: 2
+  reward_weight: 0.05
+  early_stop_patience: 0
+
+  # FM 완전 비활성 — gate가 절대 열리지 않도록
+  sgld_permanent_ratio: 1.0
+  fm_gate_sep_std_threshold: 9999.0
+  fm_gate_consecutive: 999
+  fm_gate_check_interval: 50
+  sep_std_ema_alpha: 0.1
+
+logging:
+  log_interval: 10
+  save_interval: 5
+  output_dir: outputs/ebm_collapse_sweep
