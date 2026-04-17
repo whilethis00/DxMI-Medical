@@ -1,0 +1,59 @@
+# Ablation C mini-run — gated hybrid negative strategy 검증용
+# Step 2 진단 결과: FM trivial negative 확정 (sep/std=129.9, overlap=0)
+# 목적: SGLD warm-up phase에서 energy collapse 없이 ranking 학습하는지 확인
+#
+# 실행:
+#   bash scripts/run_train.sh C 1
+#   (run_train.sh이 irl_maxent.yaml을 봄 — 이 파일은 직접 실행용)
+#
+#   또는 한 줄:
+#   /home/introai26/miniconda3/envs/dxmi_medical/bin/python scripts/train.py \
+#       --config configs/irl_minirun.yaml
+
+experiment:
+  name: irl_minirun
+  description: "Gated hybrid negative — SGLD warm-up 검증 mini-run (20 epoch)"
+  type: irl
+
+data:
+  splits_dir: data/splits
+  patch_size: 48
+  batch_size: 4
+  num_workers: 4
+
+model:
+  type: irl
+  base_ch: 32
+
+ebm:
+  sgld_steps: 60
+  sgld_step_size: 0.01
+  sgld_noise_scale: 0.01
+  replay_buffer_size: 10000
+  replay_prob: 0.95
+
+training:
+  epochs: 20                    # mini-run
+  reward_lr: 1.0e-4
+  fm_lr: 1.0e-4
+  weight_decay: 1.0e-5
+  l2_reg: 0.01
+  grad_clip: 1.0
+  reward_steps_per_iter: 3
+  fm_steps_per_iter: 10
+  policy_sample_steps: 32
+  policy_grad_steps: 2
+  reward_weight: 0.05
+  early_stop_patience: 0        # mini-run에서는 early stop 끄기
+
+  # Gated hybrid negative
+  sgld_permanent_ratio: 0.2
+  fm_gate_sep_std_threshold: 10.0
+  fm_gate_consecutive: 3
+  fm_gate_check_interval: 50
+  sep_std_ema_alpha: 0.1
+
+logging:
+  log_interval: 10              # 자주 찍기 — dynamics 확인
+  save_interval: 5
+  output_dir: outputs/irl_minirun
