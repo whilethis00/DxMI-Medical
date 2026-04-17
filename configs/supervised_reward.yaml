@@ -1,0 +1,33 @@
+# Supervised Reward Baseline (Ablation B)
+# EBM을 GT malignancy_var로 직접 지도 학습 (IRL 없이)
+# 학습 실행: python scripts/train.py --config configs/supervised_reward.yaml
+
+experiment:
+  name: supervised_reward
+  description: "EBM supervised on GT malignancy variance — Ablation B"
+  type: supervised
+
+data:
+  splits_dir: data/splits
+  patch_size: 48
+  batch_size: 32
+  num_workers: 4
+
+model:
+  type: ebm
+  base_ch: 32
+
+training:
+  epochs: 200
+  lr: 1.0e-4
+  weight_decay: 1.0e-5
+  l2_reg: 0.1           # MSE 대비 reg weight (CD보다 작게)
+  grad_clip: 1.0
+  scheduler: cosine
+  warmup_epochs: 5
+  early_stop_patience: 20
+
+logging:
+  log_interval: 50
+  save_interval: 10
+  output_dir: outputs/supervised_reward

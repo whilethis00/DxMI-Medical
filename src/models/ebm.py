@@ -130,7 +130,13 @@ def contrastive_divergence_loss(
     metrics = {
         "loss":     loss.item(),
         "cd_loss":  cd_loss.item(),
+        "reg_loss": reg_loss.item(),
         "e_pos":    e_pos.mean().item(),
         "e_neg":    e_neg.mean().item(),
+        "e_pos_std": e_pos.std(unbiased=False).item(),
+        "e_neg_std": e_neg.std(unbiased=False).item(),
+        "x_neg_min": x_neg.min().item(),
+        "x_neg_max": x_neg.max().item(),
+        "x_neg_mean": x_neg.mean().item(),
     }
     return loss, metrics

@@ -158,6 +158,33 @@ def ot_cfm_loss(
 
 # ── 샘플링 (ODE 적분) ───────────────────────────────────────────────────────────
 
+def rollout(
+    velocity_field: VelocityField,
+    x: torch.Tensor,
+    n_steps: int = 32,
+    t_start: float = 0.0,
+    t_end: float = 1.0,
+) -> torch.Tensor:
+    """
+    Euler rollout of the learned velocity field.
+
+    Unlike `sample()`, this helper keeps autograd intact so it can be used
+    inside policy loss terms.
+    """
+    if n_steps <= 0:
+        raise ValueError("n_steps must be positive")
+
+    dt = (t_end - t_start) / n_steps
+    B = x.size(0)
+
+    for i in range(n_steps):
+        t_val = t_start + i * dt
+        t = torch.full((B,), t_val, device=x.device, dtype=x.dtype)
+        v = velocity_field(x, t)
+        x = (x + v * dt).clamp(0.0, 1.0)
+
+    return x
+
 class FlowMatchingWrapper(nn.Module):
     """
     torchdyn NeuralODE와 호환되는 래퍼.
@@ -187,16 +214,9 @@ def sample(
 
     Returns: (n_samples, 1, 48, 48, 48) float32
     """
-    x = torch.randn(n_samples, 1, 48, 48, 48, device=device)
-    dt = 1.0 / n_steps
-
     velocity_field.eval()
-    for i in range(n_steps):
-        t = torch.full((n_samples,), i * dt, device=device)
-        v = velocity_field(x, t)
-        x = x + v * dt
-
-    return x.clamp(0.0, 1.0)
+    x = torch.randn(n_samples, 1, 48, 48, 48, device=device)
+    return rollout(velocity_field, x, n_steps=n_steps).clamp(0.0, 1.0)
 
 
 # ── EBM + Flow Matching 결합 인터페이스 ──────────────────────────────────────────

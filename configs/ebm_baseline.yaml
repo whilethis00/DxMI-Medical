@@ -17,8 +17,8 @@ model:
 
 ebm:
   sgld_steps: 60        # SGLD negative sample steps
-  sgld_step_size: 10.0
-  sgld_noise_scale: 0.005
+  sgld_step_size: 0.01  # fix: 10.0은 [0,1] 패치에서 39% clamp → collapse
+  sgld_noise_scale: 0.01
   replay_buffer_size: 10000   # replay buffer (CD 안정화)
   replay_prob: 0.95           # replay buffer에서 init할 확률
 
@@ -26,10 +26,11 @@ training:
   epochs: 200
   lr: 1.0e-4
   weight_decay: 1.0e-5
-  l2_reg: 1.0           # energy regularization
+  l2_reg: 0.01          # reward saturation 완화를 위해 regularization 축소
   grad_clip: 1.0
   scheduler: cosine     # cosine annealing
   warmup_epochs: 5
+  early_stop_patience: 20   # 0 = disabled
 
 logging:
   log_interval: 50      # steps

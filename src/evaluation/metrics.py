@@ -98,7 +98,8 @@ def expected_calibration_error(
 class EvalResult:
     rho: float
     p_value: float
-    auroc: float
+    auroc_neg_energy: float
+    auroc_energy: float
     ece: float
     n_samples: int
 
@@ -110,7 +111,9 @@ class EvalResult:
         return (
             f"N={self.n_samples} | "
             f"Spearman ρ={self.rho:.4f} (p={self.p_value:.4f}, {clinical}) | "
-            f"AUROC={self.auroc:.4f} | ECE={self.ece:.4f}"
+            f"AUROC(-E)={self.auroc_neg_energy:.4f} | "
+            f"AUROC(E)={self.auroc_energy:.4f} | "
+            f"ECE={self.ece:.4f}"
         )
 
 
@@ -148,9 +151,15 @@ def evaluate(
     mal_vars  = np.concatenate(all_mal_vars)
 
     rho, p   = spearman_energy_disagreement(energies, mal_vars)
-    auroc    = auroc_malignancy(energies, mal_means)
+    auroc_neg_energy = auroc_malignancy(energies, mal_means)
+    auroc_energy = auroc_malignancy(-energies, mal_means)
     ece      = expected_calibration_error(energies, mal_vars)
 
     return EvalResult(
-        rho=rho, p_value=p, auroc=auroc, ece=ece, n_samples=len(energies)
+        rho=rho,
+        p_value=p,
+        auroc_neg_energy=auroc_neg_energy,
+        auroc_energy=auroc_energy,
+        ece=ece,
+        n_samples=len(energies),
     )
