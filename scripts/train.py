@@ -488,6 +488,15 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
     if is_main():
         out_dir.mkdir(parents=True, exist_ok=True)
 
+    _log_file = out_dir / "train.log"
+
+    def _log(msg: str):
+        if not is_main():
+            return
+        print(msg, flush=True)
+        with open(_log_file, "a") as f:
+            f.write(msg + "\n")
+
     global_step = 0
 
     for epoch in range(start_epoch, cfg["training"]["epochs"]):
@@ -504,7 +513,7 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
 
             if is_main() and global_step % log_interval == 0:
                 parts = " ".join(f"{k}={v:.4f}" for k, v in metrics.items())
-                print(f"[rank0|step {global_step}] {parts}", flush=True)
+                _log(f"[rank0|step {global_step}] {parts}")
 
         if (epoch + 1) % save_interval == 0:
             ebm.eval()
@@ -515,14 +524,13 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
                 stop_flag = stopper.step(val_result.rho, epoch + 1)
 
             if is_main():
-                print(f"[epoch {epoch+1}] checkpoint saved", flush=True)
+                _log(f"[epoch {epoch+1}] checkpoint saved")
                 if val_result:
-                    print(f"[epoch {epoch+1}] val: {val_result}", flush=True)
+                    _log(f"[epoch {epoch+1}] val: {val_result}")
                     if stopper is not None:
-                        print(
+                        _log(
                             f"[epoch {epoch+1}] best_val_epoch={stopper.best_epoch} "
-                            f"best_rho={stopper.best:.4f} patience={stopper.counter}/{stopper.patience}",
-                            flush=True,
+                            f"best_rho={stopper.best:.4f} patience={stopper.counter}/{stopper.patience}"
                         )
                 save_checkpoint(
                     {
