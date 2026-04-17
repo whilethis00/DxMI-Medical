@@ -3,9 +3,15 @@
 # 목적: irl_minirun에서 step 20에 EBM이 ±50으로 붕괴한 원인 격리.
 #       FM 끄고 l2_reg만 바꿔가며 e_pos_std / e_neg_std가 살아남는 조건 확인.
 #
-# 합격 기준:
-#   e_pos_std > 0.5, e_neg_std > 0.5 (step 200 이후에도 유지)
-#   val Spearman이 epoch 10 이후 0에서 움직임
+# 실험 순서 — 변수 하나씩:
+#   1단계: l2_reg만 올리고, energy_clamp=null 유지
+#   2단계: 1단계에서도 ±포화 지속되면 그때만 energy_clamp 켬
+#   → clamp와 l2_reg 동시에 켜면 ranking이 살아난건지 값만 잘린건지 분리 불가
+#
+# 합격 기준 (3가지 모두 충족):
+#   1. step 20~200에서 e_pos_std, e_neg_std가 0으로 죽지 않을 것
+#   2. e_pos/e_neg가 극단 고정점으로 바로 안 갈 것
+#   3. val Spearman이 초반부터 랜덤(0) 위로 뜰 것
 #
 # 실행 (l2_reg 0.1 / 0.3 / 0.5 각각):
 #   이 파일에서 training.l2_reg 값을 바꾼 뒤:
