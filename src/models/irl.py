@@ -295,7 +295,9 @@ class MaxEntIRL:
             "reward_grad_norm": 0.0,
             "fm_sample_energy": 0.0,
             "sep_std_ema": 0.0,
-            "fm_enabled": 0.0,   # 0 or 1 — phase 추적용
+            "fm_enabled": 0.0,
+            "rw_min": 0.0,     # softmax weight 최솟값 — peaky 진단용
+            "rw_entropy": 0.0, # softmax weight 엔트로피 — uniform=log(B), peaky→0
         }
 
         for _ in range(self.cfg.reward_steps_per_iter):
@@ -331,8 +333,12 @@ class MaxEntIRL:
                 e_neg = e_neg.clamp(-self.cfg.energy_clamp, self.cfg.energy_clamp)
 
             # CD loss: uniform 또는 reward-weighted
+            rw_min_val     = 0.0
+            rw_entropy_val = 0.0
             if self.cfg.reward_cd_weight > 0.0 and reward is not None:
                 w = torch.softmax(reward / self.cfg.reward_cd_temp, dim=0)
+                rw_min_val     = w.min().item()
+                rw_entropy_val = -(w * w.log().clamp(min=-100)).sum().item()
                 cd_pos  = (w * e_pos).sum()
                 cd_loss = (1.0 - self.cfg.reward_cd_weight) * e_pos.mean() \
                         + self.cfg.reward_cd_weight * cd_pos \
@@ -358,6 +364,8 @@ class MaxEntIRL:
                 "fm_sample_energy": fm_energy_for_log,
                 "sep_std_ema":   self._sep_std_ema if self._sep_std_ema != float("inf") else -1.0,
                 "fm_enabled":    float(self._fm_enabled),
+                "rw_min":        rw_min_val,
+                "rw_entropy":    rw_entropy_val,
             }
             for k in total_metrics:
                 total_metrics[k] += step_metrics[k] / self.cfg.reward_steps_per_iter
