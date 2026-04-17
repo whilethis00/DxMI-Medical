@@ -39,6 +39,12 @@ class IRLConfig:
     energy_clamp: float | None = None  # hard clamp after l2_reg tuning; None = off
     grad_clip: float = 1.0
 
+    # Reward-weighted CD (옵션 A)
+    # reward_cd_weight > 0이면 uniform CD 대신 softmax(reward/T) 가중 CD 사용
+    # T가 작을수록 high-reward 샘플에 집중; T→∞이면 uniform CD와 동일
+    reward_cd_weight: float = 0.0     # 0 = off (기존 uniform CD), 1 = full weighted CD
+    reward_cd_temp: float = 1.0       # softmax temperature for reward weighting
+
     # Gated hybrid negative strategy
     # Phase 1 (warm-up): SGLD-only negatives until FM earns its place
     # Phase 2 (hybrid): FM negatives mixed in, SGLD permanently kept at sgld_permanent_ratio
@@ -267,12 +273,14 @@ class MaxEntIRL:
 
     # ── EBM reward 업데이트 ────────────────────────────────────────────────────
 
-    def update_reward(self, x_demo: torch.Tensor) -> dict:
+    def update_reward(self, x_demo: torch.Tensor, reward: torch.Tensor | None = None) -> dict:
         """
         MaxEnt IRL reward gradient:
           ∇_φ L = E_demo[∇_φ E_φ(x)] - E_model[∇_φ E_φ(x̃)]
 
-        EBM loss: E(x_demo) - E(x_neg)  + λ||E||²
+        EBM loss (uniform):         mean(E(x_demo)) - mean(E(x_neg)) + λ||E||²
+        EBM loss (reward-weighted): (w · E(x_demo)).sum() - mean(E(x_neg)) + λ||E||²
+          where w = softmax(reward / T),  reward = -Var(malignancy)
 
         Negative strategy: gated hybrid (SGLD warm-up → SGLD+FM after gate)
         """
@@ -322,7 +330,16 @@ class MaxEntIRL:
                 e_pos = e_pos.clamp(-self.cfg.energy_clamp, self.cfg.energy_clamp)
                 e_neg = e_neg.clamp(-self.cfg.energy_clamp, self.cfg.energy_clamp)
 
-            cd_loss  = (e_pos - e_neg).mean()
+            # CD loss: uniform 또는 reward-weighted
+            if self.cfg.reward_cd_weight > 0.0 and reward is not None:
+                w = torch.softmax(reward / self.cfg.reward_cd_temp, dim=0)
+                cd_pos  = (w * e_pos).sum()
+                cd_loss = (1.0 - self.cfg.reward_cd_weight) * e_pos.mean() \
+                        + self.cfg.reward_cd_weight * cd_pos \
+                        - e_neg.mean()
+            else:
+                cd_loss = (e_pos - e_neg).mean()
+
             reg_loss = self.cfg.l2_reg * (e_pos ** 2 + e_neg ** 2).mean()
             loss     = cd_loss + reg_loss
             loss.backward()
@@ -404,16 +421,17 @@ class MaxEntIRL:
 
     # ── IRL 루프 1 iteration ────────────────────────────────────────────────────
 
-    def step(self, x_demo: torch.Tensor) -> dict:
+    def step(self, x_demo: torch.Tensor, reward: torch.Tensor | None = None) -> dict:
         """
         IRL 1 iteration = reward update + policy update.
 
         Args:
             x_demo: (B, 1, 48, 48, 48) demonstration patches
+            reward: (B,) per-sample reward, e.g. -Var(malignancy). None = uniform CD.
 
         Returns:
             metrics dict
         """
-        reward_metrics = self.update_reward(x_demo)
+        reward_metrics = self.update_reward(x_demo, reward=reward)
         fm_metrics     = self.update_policy(x_demo)
         return {**reward_metrics, **fm_metrics}

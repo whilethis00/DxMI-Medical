@@ -1,0 +1,82 @@
+# 옵션 A: Reward-weighted CD — loss surgery 1단계
+#
+# 목적: CD loss에 per-sample reward weight를 주입해 within-demo ranking 유도.
+#       현재 uniform CD는 within-class gradient가 구조적으로 없음 → ranking 불가.
+#
+# Loss:
+#   cd_pos = (w · e_pos).sum()   where w = softmax(reward / T)
+#   cd_loss = (1-α)*mean(e_pos) + α*cd_pos - mean(e_neg)
+#   reward = -Var(malignancy_scores)   ← LIDC-IDRI GT
+#
+# 파라미터:
+#   reward_cd_weight (α): 0=uniform, 1=fully weighted. 먼저 0.5로 시작.
+#   reward_cd_temp (T): temperature. 낮을수록 high-reward에 집중.
+#
+# 실험 순서 (변수 하나씩):
+#   1단계: α=0.5, T=1.0
+#   2단계: α=1.0, T=1.0
+#   3단계: α=1.0, T=0.5 (더 sharpen)
+#
+# FM: 봉인 유지 (fm_gate_sep_std_threshold=9999)
+#
+# 합격 기준:
+#   1. e_pos_std > 0.5 (step 200 이후 유지)
+#   2. e_pos/e_neg 극단 고정점으로 즉시 안 갈 것
+#   3. val Spearman > 0, p < 0.05
+#
+# 실행:
+#   CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 scripts/train.py \
+#       --config configs/ebm_weighted_cd.yaml
+
+experiment:
+  name: ebm_weighted_cd
+  description: "Reward-weighted CD — loss surgery 옵션 A (α=0.5, T=1.0)"
+  type: irl
+
+data:
+  splits_dir: data/splits
+  patch_size: 48
+  batch_size: 4
+  num_workers: 4
+
+model:
+  type: irl
+  base_ch: 32
+
+ebm:
+  sgld_steps: 60
+  sgld_step_size: 0.01
+  sgld_noise_scale: 0.01
+  replay_buffer_size: 10000
+  replay_prob: 0.95
+
+training:
+  epochs: 20
+  reward_lr: 1.0e-4
+  fm_lr: 1.0e-4
+  weight_decay: 1.0e-5
+  l2_reg: 0.1
+  energy_clamp: null
+  grad_clip: 1.0
+  reward_steps_per_iter: 3
+  fm_steps_per_iter: 10
+  policy_sample_steps: 32
+  policy_grad_steps: 2
+  reward_weight: 0.05
+  early_stop_patience: 0
+
+  # 옵션 A: reward-weighted CD
+  reward_cd_weight: 0.5      # α: 0=uniform, 1=fully weighted
+  reward_cd_temp: 1.0        # T: softmax temperature
+
+  # FM 봉인
+  sgld_permanent_ratio: 1.0
+  fm_gate_sep_std_threshold: 9999.0
+  fm_gate_consecutive: 999
+  fm_gate_check_interval: 50
+  sep_std_ema_alpha: 0.1
+
+logging:
+  log_interval: 10
+  save_interval: 5
+  output_dir: outputs/ebm_weighted_cd

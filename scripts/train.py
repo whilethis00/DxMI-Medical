@@ -467,6 +467,8 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
         fm_gate_consecutive   = cfg["training"].get("fm_gate_consecutive", 3),
         fm_gate_check_interval= cfg["training"].get("fm_gate_check_interval", 50),
         sep_std_ema_alpha     = cfg["training"].get("sep_std_ema_alpha", 0.1),
+        reward_cd_weight      = cfg["training"].get("reward_cd_weight", 0.0),
+        reward_cd_temp        = cfg["training"].get("reward_cd_temp", 1.0),
     )
     # DDP 래퍼를 그대로 전달 → MaxEntIRL 내부에서 gradient sync 보장
     irl = MaxEntIRL(ebm, vf, irl_cfg, device)
@@ -495,8 +497,9 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
         vf.train()
 
         for batch in loaders["train"]:
-            x = batch["patch"].to(device)
-            metrics = irl.step(x)
+            x      = batch["patch"].to(device)
+            reward = batch["reward"].to(device) if "reward" in batch else None
+            metrics = irl.step(x, reward=reward)
             global_step += 1
 
             if is_main() and global_step % log_interval == 0:
