@@ -12,18 +12,59 @@ Maximum Entropy IRL + EBM 기반 임상 의료 불확실성 추정 모델.
 
 ```
 data/
-  raw/        # LIDC-IDRI 원본 (다운로드 중 — screen: lidc_download)
+  raw/        # LIDC-IDRI 원본
   processed/  # 전처리된 패치/볼륨
   splits/     # train/val/test split 파일
 src/
   data/       # 데이터 로딩, 전처리, reward 계산
   models/     # EBM, Flow Matching, IRL
   evaluation/ # 메트릭 (ECE, AUROC, Spearman ρ)
-experiments/  # 실험별 폴더 (실험 시작 전에 구성)
 configs/      # yaml 실험 설정
 scripts/      # 실행 스크립트
-outputs/      # 체크포인트, 로그, 결과
+outputs/      # 실험별 폴더 — <exp_name>_<YYYYMMDD>/
 ```
+
+---
+
+## 실험 루틴 (MUST FOLLOW)
+
+### 1. 실험 실행
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 scripts/train.py \
+    --config configs/<실험config>.yaml
+```
+
+실험 폴더는 `train.py`가 자동 생성: `outputs/<exp_name>_<YYYYMMDD>/`
+
+### 2. 실험 폴더 구조
+
+```
+outputs/<exp_name>_<YYYYMMDD>/
+  train.log       # step/val/epoch 로그 자동 저장
+  RESULT.md       # 실험 완료 시 자동 생성 (git push 포함)
+  ckpt_epoch*.pt  # 체크포인트 (git 제외 — .gitignore)
+```
+
+### 3. 실험 완료 시 자동 처리 (train.py)
+
+- `RESULT.md` 자동 생성: 개요, 실험 세팅, val 지표 파싱
+- `train.log` + `RESULT.md` → git add/commit/push 자동 실행
+- 체크포인트(.pt)는 git에 올리지 않음
+
+### 4. RESULT.md 작성 항목
+
+자동 생성 후 **직접 채워야 할 항목**:
+- 가설 (실험 전에 예측한 것)
+- 가설 달성 여부
+- 인사이트
+- 다음 계획
+
+### 5. .gitignore 확인
+
+`outputs/**/*.pt`는 반드시 .gitignore에 포함되어야 함.
+
+---
 
 ## 핵심 아이디어
 

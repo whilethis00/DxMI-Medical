@@ -2,8 +2,9 @@
 data/processed/
 data/raw/
 
-# 출력물
-outputs/
+# 출력물 — 체크포인트만 제외, RESULT.md/train.log는 추적
+outputs/**/*.pt
+outputs/**/*.pth
 *.out
 *.err
 
@@ -22,4 +23,6 @@ notebooks/.ipynb_checkpoints/
 
 # 환경
 .env
-*.log
+
+# 루트 레벨 .log만 제외 (outputs/ 내 train.log는 추적)
+/*.log

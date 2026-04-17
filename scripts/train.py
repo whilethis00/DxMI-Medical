@@ -14,11 +14,13 @@ DDP (다중 GPU):
 
 import argparse
 import os
+import subprocess
 import yaml
 import torch
 import torch.distributed as dist
 import torch.nn.functional as F
 import numpy as np
+from datetime import datetime
 from pathlib import Path
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader, DistributedSampler
@@ -554,6 +556,85 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
     cleanup_ddp()
 
 
+# ── 실험 결과 자동 정리 ────────────────────────────────────────────────────────
+
+def _write_result_md(cfg: dict, config_path: str, exp_dir: Path):
+    """실험 완료 후 RESULT.md 생성. 로그에서 val 지표 파싱."""
+    exp_info  = cfg.get("experiment", {})
+    training  = cfg.get("training", {})
+    log_file  = exp_dir / "train.log"
+
+    # val 지표 파싱
+    val_lines = []
+    if log_file.exists():
+        for line in log_file.read_text().splitlines():
+            if "val:" in line and "Spearman" in line:
+                val_lines.append(line.strip())
+
+    last_val = val_lines[-1] if val_lines else "val 결과 없음"
+
+    result_md = exp_dir / "RESULT.md"
+    with open(result_md, "w") as f:
+        f.write(f"# {exp_info.get('name', 'exp')} 실험 결과\n\n")
+        f.write(f"날짜: {datetime.now().strftime('%Y-%m-%d')}\n")
+        f.write(f"config: `{config_path}`\n\n")
+        f.write("---\n\n")
+        f.write("## 개요\n\n")
+        f.write(f"{exp_info.get('description', '')}\n\n")
+        f.write("## 가설\n\n")
+        f.write("*(작성 필요)*\n\n")
+        f.write("## 실험 세팅\n\n")
+        f.write(f"| 항목 | 값 |\n|------|----|\n")
+        f.write(f"| epochs | {training.get('epochs', '?')} |\n")
+        f.write(f"| l2_reg | {training.get('l2_reg', '?')} |\n")
+        f.write(f"| reward_cd_weight | {training.get('reward_cd_weight', 'N/A')} |\n")
+        f.write(f"| reward_cd_temp | {training.get('reward_cd_temp', 'N/A')} |\n")
+        f.write(f"| fm_gate_sep_std_threshold | {training.get('fm_gate_sep_std_threshold', '?')} |\n\n")
+        f.write("## 결과\n\n")
+        if val_lines:
+            f.write("| epoch | 로그 |\n|-------|------|\n")
+            for line in val_lines:
+                epoch = line.split("]")[0].replace("[", "")
+                f.write(f"| {epoch} | `{line}` |\n")
+        else:
+            f.write("val 결과 없음\n")
+        f.write("\n")
+        f.write(f"**최종 val**: `{last_val}`\n\n")
+        f.write("## 가설 달성 여부\n\n")
+        f.write("*(작성 필요)*\n\n")
+        f.write("## 인사이트\n\n")
+        f.write("*(작성 필요)*\n\n")
+        f.write("## 다음 계획\n\n")
+        f.write("*(작성 필요)*\n")
+
+    print(f"[INFO] RESULT.md 생성: {result_md}", flush=True)
+
+
+def _git_push_results(exp_dir: Path):
+    """RESULT.md, train.log를 git add/commit/push. 체크포인트(.pt)는 제외."""
+    repo_root = Path(__file__).parent.parent
+    files_to_add = [
+        str(exp_dir / "RESULT.md"),
+        str(exp_dir / "train.log"),
+    ]
+    files_to_add = [f for f in files_to_add if Path(f).exists()]
+    if not files_to_add:
+        return
+
+    exp_name = exp_dir.name
+    try:
+        subprocess.run(["git", "-C", str(repo_root), "add"] + files_to_add, check=True)
+        subprocess.run(
+            ["git", "-C", str(repo_root), "commit", "-m",
+             f"실험 결과: {exp_name} — RESULT.md, train.log 추가"],
+            check=True,
+        )
+        subprocess.run(["git", "-C", str(repo_root), "push"], check=True)
+        print(f"[INFO] git push 완료: {exp_name}", flush=True)
+    except subprocess.CalledProcessError as e:
+        print(f"[WARN] git push 실패: {e}", flush=True)
+
+
 # ── 메인 ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -582,6 +663,12 @@ def main():
     cfg = load_config(args.config)
     set_seed(args.seed)
 
+    # 실험 폴더: outputs/<exp_name>_<YYYYMMDD>
+    exp_name = cfg.get("experiment", {}).get("name", "exp")
+    date_str  = datetime.now().strftime("%Y%m%d")
+    exp_dir   = Path(cfg["logging"]["output_dir"]).parent / f"{exp_name}_{date_str}"
+    cfg["logging"]["output_dir"] = str(exp_dir)
+
     exp_type = cfg.get("experiment", {}).get("type", "ebm_only")
     if exp_type == "irl":
         train_irl(cfg, device, resume_path=args.resume)
@@ -589,6 +676,11 @@ def main():
         train_supervised(cfg, device, resume_path=args.resume)
     else:
         train_ebm_only(cfg, device, resume_path=args.resume)
+
+    # 실험 완료 후 RESULT.md 생성 + git push (rank0만)
+    if is_main():
+        _write_result_md(cfg, args.config, exp_dir)
+        _git_push_results(exp_dir)
 
 
 if __name__ == "__main__":
