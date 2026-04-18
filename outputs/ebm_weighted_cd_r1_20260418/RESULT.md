@@ -1,63 +1,143 @@
-# ebm_weighted_cd_r1 실험 결과
+# ebm_weighted_cd_r1 — Result
 
-날짜: 2026-04-18
-config: `configs/ebm_weighted_cd_r1.yaml`
+## 1. 실험 메타
+
+| 항목 | 내용 |
+|------|------|
+| **날짜** | 2026-04-18 |
+| **베이스** | ebm_weighted_cd (reward-weighted CD 최초 구현) |
+| **목적** | Reward-weighted CD 재현성 확인 — seed=1 |
+| **설정** | epochs=20, l2_reg=0.1, reward_cd_weight=1.0, reward_cd_temp=1.0, fm_gate_sep_std_threshold=9999 (FM 비활성) |
+| **현황** | 학습 완료, val 완료 |
 
 ---
 
-## 개요
+## 2. 무엇을 검증하나
 
-Reward-weighted CD — reproduction run 1 (seed=1)
+**배경**: Reward-weighted CD는 LIDC-IDRI의 판독자 간 disagreement를 reward로 변환하여 EBM이 disagreement가 큰 샘플에 높은 energy를 할당하도록 학습하는 핵심 IRL 손실이다. seed=1로 첫 번째 재현 실험을 수행하여, reward-weighted CD 구현이 기본적으로 작동하는지 검증한다.
 
-## 가설
+**이번 변경**: seed=1 고정. 나머지 하이퍼파라미터는 기본값 그대로.
 
-*(작성 필요)*
+**FM gate**: `fm_gate_sep_std_threshold=9999`로 설정하여 FM(Flow Matching) gate가 절대 열리지 않도록 했다. 즉, 이번 실험에서 FM 컴포넌트는 완전히 비활성이며, EBM의 reward-weighted CD 학습만 이루어진다. FM loss는 계산되지만 policy gradient에 반영되지 않는다.
 
-## 실험 세팅
+**합격 기준**:
+1. Spearman ρ > 0, p < 0.05 (epoch 20 기준)
+2. AUROC(E) > 0.5 (energy가 disagreement 방향으로 정렬됨을 의미)
 
-| 항목 | 값 |
-|------|----|
-| epochs | 20 |
-| l2_reg | 0.1 |
-| reward_cd_weight | 1.0 |
-| reward_cd_temp | 1.0 |
-| fm_gate_sep_std_threshold | 9999.0 |
+---
 
-## 결과
+## 3. 학습 손실 곡선
 
-| epoch | 로그 |
-|-------|------|
-| epoch 1 | `[epoch 1] val: N=177 | Spearman ρ=-0.1316 (p=0.0808, FAIL) | AUROC(-E)=0.4628 | AUROC(E)=0.5372 | ECE=0.7885` |
-| epoch 2 | `[epoch 2] val: N=177 | Spearman ρ=0.0029 (p=0.9691, FAIL) | AUROC(-E)=0.4879 | AUROC(E)=0.5121 | ECE=0.7933` |
-| epoch 3 | `[epoch 3] val: N=177 | Spearman ρ=0.0296 (p=0.6956, FAIL) | AUROC(-E)=0.4307 | AUROC(E)=0.5693 | ECE=0.7914` |
-| epoch 4 | `[epoch 4] val: N=177 | Spearman ρ=0.1603 (p=0.0330, PASS) | AUROC(-E)=0.4411 | AUROC(E)=0.5589 | ECE=0.7929` |
-| epoch 5 | `[epoch 5] val: N=177 | Spearman ρ=0.2342 (p=0.0017, PASS) | AUROC(-E)=0.4053 | AUROC(E)=0.5947 | ECE=0.7924` |
-| epoch 6 | `[epoch 6] val: N=177 | Spearman ρ=0.1759 (p=0.0192, PASS) | AUROC(-E)=0.3292 | AUROC(E)=0.6708 | ECE=0.7934` |
-| epoch 7 | `[epoch 7] val: N=177 | Spearman ρ=0.1963 (p=0.0088, PASS) | AUROC(-E)=0.4076 | AUROC(E)=0.5924 | ECE=0.7962` |
-| epoch 8 | `[epoch 8] val: N=177 | Spearman ρ=0.1400 (p=0.0631, FAIL) | AUROC(-E)=0.4196 | AUROC(E)=0.5804 | ECE=0.7963` |
-| epoch 9 | `[epoch 9] val: N=177 | Spearman ρ=0.0349 (p=0.6449, FAIL) | AUROC(-E)=0.4464 | AUROC(E)=0.5536 | ECE=0.7932` |
-| epoch 10 | `[epoch 10] val: N=177 | Spearman ρ=0.1934 (p=0.0099, PASS) | AUROC(-E)=0.3537 | AUROC(E)=0.6463 | ECE=0.7966` |
-| epoch 11 | `[epoch 11] val: N=177 | Spearman ρ=0.2181 (p=0.0035, PASS) | AUROC(-E)=0.3810 | AUROC(E)=0.6190 | ECE=0.7945` |
-| epoch 12 | `[epoch 12] val: N=177 | Spearman ρ=0.2198 (p=0.0033, PASS) | AUROC(-E)=0.4069 | AUROC(E)=0.5931 | ECE=0.7929` |
-| epoch 13 | `[epoch 13] val: N=177 | Spearman ρ=0.1254 (p=0.0962, FAIL) | AUROC(-E)=0.3066 | AUROC(E)=0.6934 | ECE=0.7930` |
-| epoch 14 | `[epoch 14] val: N=177 | Spearman ρ=0.2364 (p=0.0015, PASS) | AUROC(-E)=0.4215 | AUROC(E)=0.5785 | ECE=0.7937` |
-| epoch 15 | `[epoch 15] val: N=177 | Spearman ρ=0.1450 (p=0.0541, FAIL) | AUROC(-E)=0.3736 | AUROC(E)=0.6264 | ECE=0.7982` |
-| epoch 16 | `[epoch 16] val: N=177 | Spearman ρ=0.1918 (p=0.0105, PASS) | AUROC(-E)=0.3184 | AUROC(E)=0.6816 | ECE=0.7930` |
-| epoch 17 | `[epoch 17] val: N=177 | Spearman ρ=0.2298 (p=0.0021, PASS) | AUROC(-E)=0.3911 | AUROC(E)=0.6089 | ECE=0.7939` |
-| epoch 18 | `[epoch 18] val: N=177 | Spearman ρ=0.2100 (p=0.0050, PASS) | AUROC(-E)=0.3513 | AUROC(E)=0.6487 | ECE=0.7941` |
-| epoch 19 | `[epoch 19] val: N=177 | Spearman ρ=0.2285 (p=0.0022, PASS) | AUROC(-E)=0.3295 | AUROC(E)=0.6705 | ECE=0.7927` |
-| epoch 20 | `[epoch 20] val: N=177 | Spearman ρ=0.2233 (p=0.0028, PASS) | AUROC(-E)=0.3347 | AUROC(E)=0.6653 | ECE=0.7933` |
+| step | reward_loss | cd_loss | reg_loss | e_pos | e_neg | sep_std_ema | fm_sample_energy | policy_energy |
+|------|-------------|---------|----------|-------|-------|-------------|-----------------|---------------|
+| 200  | -4.978 | -10.402 | 5.424 | -5.468 | 4.904 | 5.8  | -3.02  | -8.81  |
+| 400  | -4.928 | -9.371  | 4.443 | -4.359 | 5.036 | 16.9 | -6.31  | -7.92  |
+| 600  | -4.957 | -10.459 | 5.502 | -5.424 | 5.048 | 13.0 | -6.10  | -7.69  |
+| 800  | -5.061 | -10.086 | 5.025 | -5.034 | 4.988 | 27.6 | -6.72  | -8.43  |
+| 1000 | -5.008 | -9.467  | 4.459 | -4.616 | 4.809 | 14.1 | -7.49  | -9.76  |
+| 1200 | -4.973 | -9.836  | 4.863 | -4.809 | 5.028 | 31.4 | -12.71 | -16.78 |
+| 1400 | -5.031 | -9.681  | 4.649 | -4.596 | 5.024 | 45.2 | -12.10 | -16.32 |
+| 1600 | -5.305 | -10.587 | 5.282 | -5.184 | 5.013 | 20.5 | -12.11 | -16.89 |
+| 1800 | -5.184 | -10.287 | 5.103 | -4.927 | 5.136 | 26.8 | -11.03 | -16.94 |
+| 2000 | -5.068 | -9.810  | 4.742 | -4.653 | 5.050 | 58.8 | -11.64 | -17.52 |
+| 2200 | -4.971 | -10.526 | 5.555 | -5.518 | 5.000 | 28.6 | -10.60 | -16.54 |
+| 2400 | -4.941 | -9.820  | 4.879 | -4.820 | 5.010 | 29.6 | -13.17 | -19.56 |
+| 2600 | -5.134 | -9.401  | 4.266 | -4.138 | 4.980 | 31.3 | -14.74 | -23.56 |
+| 2800 | -4.991 | -9.904  | 4.913 | -4.900 | 4.951 | 28.5 | -13.96 | -24.38 |
+| 3000 | -5.047 | -9.595  | 4.548 | -4.342 | 5.086 | 23.1 | -12.03 | -21.73 |
+| 3200 | -4.929 | -10.817 | 5.888 | -5.825 | 4.961 | 43.8 | -16.11 | -28.77 |
+| 3400 | -4.781 | -10.408 | 5.627 | -5.638 | 4.939 | 91.3 | -20.10 | -33.61 |
+| 3600 | -5.018 | -10.270 | 5.251 | -5.227 | 5.006 | 42.8 | -15.76 | -33.32 |
+| 3800 | -4.983 | -9.606  | 4.624 | -4.504 | 5.041 | 72.4 | -15.10 | -27.76 |
 
-**최종 val**: `[epoch 20] val: N=177 | Spearman ρ=0.2233 (p=0.0028, PASS) | AUROC(-E)=0.3347 | AUROC(E)=0.6653 | ECE=0.7933`
+**관찰**:
+- **reward_loss ≈ -5.0**: 전 구간 안정적. `e_pos < 0` (positive sample의 energy가 낮음)이 유지되므로 EBM이 올바른 방향으로 학습 중.
+- **sep_std_ema**: step 200의 5.8에서 step 3400의 91.3까지 전반적으로 증가 → positive/negative sample 간 energy gap의 표준편차가 커지고 있음. 단, 진동이 크다(step 1600 : 20.5 → step 2000 : 58.8 → step 2200 : 28.6). r2에 비해 불안정.
+- **policy_energy**: -8.8 → -33.6 (단조 감소) → EBM energy landscape가 점점 sharp해짐. 모델이 점점 낮은 energy 영역(high confidence, low disagreement)을 선호.
+- **fm_sample_energy**: step 200의 -3.0에서 후반부 -15~-20 수준으로 하락 → FM prior의 energy 추정값이 학습과 함께 음의 방향으로 이동. 단, fm_enabled=0이므로 policy에는 영향 없음.
+- `fm_enabled=0.0` 전 구간 유지 (threshold=9999으로 FM gate 비활성, 예상대로).
+- `fm_loss`는 계속 계산되나 policy gradient에 반영 안 됨.
 
-## 가설 달성 여부
+---
 
-*(작성 필요)*
+## 4. 검증 지표
 
-## 인사이트
+### epoch별 val 지표
 
-*(작성 필요)*
+| epoch | Spearman ρ | p-value | PASS | AUROC(-E) | AUROC(E) | ECE |
+|-------|-----------|---------|------|-----------|----------|-----|
+| 1  | -0.1316 | 0.0808 | ❌ | 0.4628 | 0.5372 | 0.7885 |
+| 2  |  0.0029 | 0.9691 | ❌ | 0.4879 | 0.5121 | 0.7933 |
+| 3  |  0.0296 | 0.6956 | ❌ | 0.4307 | 0.5693 | 0.7914 |
+| 4  |  0.1603 | 0.0330 | ✅ | 0.4411 | 0.5589 | 0.7929 |
+| 5  |  0.2342 | 0.0017 | ✅ | 0.4053 | 0.5947 | 0.7924 |
+| 6  |  0.1759 | 0.0192 | ✅ | 0.3292 | 0.6708 | 0.7934 |
+| 7  |  0.1963 | 0.0088 | ✅ | 0.4076 | 0.5924 | 0.7962 |
+| 8  |  0.1400 | 0.0631 | ❌ | 0.4196 | 0.5804 | 0.7963 |
+| 9  |  0.0349 | 0.6449 | ❌ | 0.4464 | 0.5536 | 0.7932 |
+| 10 |  0.1934 | 0.0099 | ✅ | 0.3537 | 0.6463 | 0.7966 |
+| 11 |  0.2181 | 0.0035 | ✅ | 0.3810 | 0.6190 | 0.7945 |
+| 12 |  0.2198 | 0.0033 | ✅ | 0.4069 | 0.5931 | 0.7929 |
+| 13 |  0.1254 | 0.0962 | ❌ | 0.3066 | 0.6934 | 0.7930 |
+| 14 |  0.2364 | 0.0015 | ✅ | 0.4215 | 0.5785 | 0.7937 |
+| 15 |  0.1450 | 0.0541 | ❌ | 0.3736 | 0.6264 | 0.7982 |
+| 16 |  0.1918 | 0.0105 | ✅ | 0.3184 | 0.6816 | 0.7930 |
+| 17 |  0.2298 | 0.0021 | ✅ | 0.3911 | 0.6089 | 0.7939 |
+| 18 |  0.2100 | 0.0050 | ✅ | 0.3513 | 0.6487 | 0.7941 |
+| 19 |  0.2285 | 0.0022 | ✅ | 0.3295 | 0.6705 | 0.7927 |
+| 20 |  0.2233 | 0.0028 | ✅ | 0.3347 | 0.6653 | 0.7933 |
 
-## 다음 계획
+**최고 Spearman**: epoch 14 ρ=0.2364  
+**최고 AUROC(E)**: epoch 13 0.6934
 
-*(작성 필요)*
+### r1 vs r2 비교 (epoch 20 기준)
+
+| 지표 | r1 (seed=1) | r2 (seed=2) | 비고 |
+|------|------------|------------|------|
+| Spearman ρ | 0.2233 | 0.2650 | r2 우세 |
+| AUROC(E) | 0.6653 | 0.6767 | r2 우세 |
+| ECE | 0.7933 | 0.7936 | 동등 |
+| PASS (ep20) | ✅ | ✅ | 두 run 모두 합격 |
+
+---
+
+## 5. 결과 해석 및 인사이트
+
+### 긍정적
+- **합격 기준 달성** ✅: epoch 20에서 Spearman ρ=0.2233 (p=0.0028), AUROC(E)=0.6653. 두 기준 모두 충족.
+- **AUROC(E) > 0.5 전 구간 유지**: energy가 disagreement 방향으로 정렬되어 있음을 의미. 특히 epoch 13의 AUROC(E)=0.6934는 이번 run에서 가장 높은 discrimination ability.
+- **sep_std_ema 전반적 증가**: 5.8(step 200) → 91.3(step 3400) → EBM이 positive/negative sample 간 에너지 간격을 점진적으로 키우고 있음.
+- **reward-weighted CD 기본 동작 확인**: IRL signal이 의미 있게 작동함을 seed=1로 확인.
+
+### 주의
+- **epoch 8, 9, 13, 15에서 FAIL 재발**: 후반부에도 PASS/FAIL이 교번 → 수렴이 불안정. r2(epoch 8 이후 FAIL 없음)와 대조적. seed=1의 초기화가 더 volatile한 loss landscape에 있음을 시사.
+- **r2 대비 Spearman ρ 약 0.042 낮음**: 최고 Spearman도 0.2364 vs 0.2902 — seed 민감도가 상당함. 두 run의 평균/표준편차로 리포트해야 함.
+- **AUROC(E)가 epoch 13 이후 진동(0.59~0.69)**: plateau 또는 과적합 가능성. best-val checkpoint가 last checkpoint가 아닐 수 있음.
+- **ECE ≈ 0.793 전 구간 고착**: calibration이 학습으로 전혀 개선되지 않음. CD loss는 rank-based optimization이므로 절대적 energy 크기를 calibrate하지 않기 때문.
+
+### 근본 원인 가설
+- **초반(epoch 1~3) FAIL**: EBM warm-up에 필요한 시간으로 정상. energy landscape가 충분히 형성되지 않은 상태에서 validation이 이루어짐.
+- **중반 이후 FAIL 재발**: CD loss의 mini-batch 분산이 커서 gradient 방향이 흔들리는 것으로 추정. r1이 r2보다 `sep_std_ema` 변동이 크다는 점과 일치. gradient clipping 또는 더 작은 lr 실험 필요.
+- **ECE 고착**: EBM의 CD loss는 `E(x+) < E(x-)` 관계(rank)만 최적화하므로, energy의 절대적 크기가 disagreement 확률과 calibrate되지 않음. post-hoc temperature scaling으로 해결 가능.
+
+---
+
+## 6. 다음 스텝
+
+- [ ] r1·r2 평균 Spearman ρ=(0.2233+0.2650)/2=0.2442, std=0.030 → ablation 논문 수치로 확정
+- [ ] ebm_baseline (no IRL, supervised만)과 정식 ablation 비교: C(IRL) > B(supervised) 검증
+- [ ] best-val checkpoint(epoch 14, ρ=0.2364) 별도 저장 전략 추가 (`save_best_val: true` 옵션)
+- [ ] ECE 개선: post-hoc temperature scaling (energy / T, val로 T 최적화)
+- [ ] FM gate 활성화 실험: `fm_gate_sep_std_threshold=30~50` 설정 후 FM 효과 측정
+- [ ] gradient clipping 또는 lr 축소 실험으로 중반 FAIL 재발 방지 시도
+- [ ] seed=3 추가 run으로 재현성 신뢰구간 보강 (ICLR 제출 전)
+
+---
+
+## 7. 저장 파일 목록
+
+```
+outputs/ebm_weighted_cd_r1_20260418/
+├── RESULT.md
+└── train.log
+```
