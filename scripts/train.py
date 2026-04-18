@@ -492,22 +492,48 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
         out_dir.mkdir(parents=True, exist_ok=True)
 
     _log_file = out_dir / "train.log"
+    total_epochs = cfg["training"]["epochs"]
+
+    def _ts() -> str:
+        return datetime.now().strftime("%H:%M:%S")
 
     def _log(msg: str):
         if not is_main():
             return
-        print(msg, flush=True)
+        line = f"[{_ts()}] {msg}"
+        print(line, flush=True)
         with open(_log_file, "a") as f:
-            f.write(msg + "\n")
+            f.write(line + "\n")
+
+    def _fmt_step(ep: int, step: int, m: dict) -> str:
+        # loss 그룹
+        loss = (f"rw={m.get('reward_loss',0):+.3f}  "
+                f"cd={m.get('cd_loss',0):+.3f}  "
+                f"reg={m.get('reg_loss',0):.3f}")
+        # energy 그룹
+        energy = (f"e+={m.get('e_pos',0):+.2f}(±{m.get('e_pos_std',0):.3f})  "
+                  f"e-={m.get('e_neg',0):+.2f}(±{m.get('e_neg_std',0):.3f})  "
+                  f"sep={m.get('sep_std_ema',0):.1f}")
+        # FM 그룹
+        fm_on = "ON" if m.get("fm_enabled", 0) > 0.5 else "off"
+        fm    = f"fm_e={m.get('fm_sample_energy',0):+.1f}  fm={fm_on}"
+        # grad 그룹
+        grad  = (f"∇rw={m.get('reward_grad_norm',0):.2f}  "
+                 f"∇pol={m.get('policy_grad_norm',0):.2f}")
+        return (f"[ep{ep:02d}|s{step:04d}]  "
+                f"{loss}  │  {energy}  │  {fm}  │  {grad}")
 
     global_step = 0
     best_val_rho = -float("inf")
 
-    for epoch in range(start_epoch, cfg["training"]["epochs"]):
+    for epoch in range(start_epoch, total_epochs):
         if is_ddp():
             loaders["train"].sampler.set_epoch(epoch)
         ebm.train()
         vf.train()
+
+        if is_main():
+            _log(f"{'─'*20} Epoch {epoch+1:02d}/{total_epochs} {'─'*20}")
 
         for batch in loaders["train"]:
             x      = batch["patch"].to(device)
@@ -516,8 +542,7 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
             global_step += 1
 
             if is_main() and global_step % log_interval == 0:
-                parts = " ".join(f"{k}={v:.4f}" for k, v in metrics.items())
-                _log(f"[rank0|step {global_step}] {parts}")
+                _log(_fmt_step(epoch + 1, global_step, metrics))
 
         if (epoch + 1) % save_interval == 0:
             ebm.eval()
@@ -528,14 +553,19 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
                 stop_flag = stopper.step(val_result.rho, epoch + 1)
 
             if is_main():
-                _log(f"[epoch {epoch+1}] checkpoint saved")
                 if val_result:
-                    _log(f"[epoch {epoch+1}] val: {val_result}")
+                    clinical = "PASS ✓" if val_result.passed_clinical() else "FAIL ✗"
+                    best_marker = " ◀ BEST" if (save_best_val and val_result.rho > best_val_rho) else ""
+                    _log(
+                        f"{'═'*10} VAL ep{epoch+1:02d} {'═'*10}  "
+                        f"ρ={val_result.rho:+.4f} (p={val_result.p_value:.4f}) [{clinical}]  "
+                        f"AUROC(E)={val_result.auroc_energy:.4f}  "
+                        f"ECE={val_result.ece:.4f}  "
+                        f"N={val_result.n_samples}"
+                        f"{best_marker}"
+                    )
                     if stopper is not None:
-                        _log(
-                            f"[epoch {epoch+1}] best_val_epoch={stopper.best_epoch} "
-                            f"best_rho={stopper.best:.4f} patience={stopper.counter}/{stopper.patience}"
-                        )
+                        _log(f"  best so far: ρ={stopper.best:.4f} @ ep{stopper.best_epoch}")
                     if save_best_val and val_result.rho > best_val_rho:
                         best_val_rho = val_result.rho
                         save_checkpoint(
@@ -546,7 +576,6 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
                             },
                             out_dir / "ckpt_best_val.pt",
                         )
-                        _log(f"[epoch {epoch+1}] best_val updated: rho={best_val_rho:.4f} → ckpt_best_val.pt")
                 save_checkpoint(
                     {
                         "epoch": epoch,
@@ -555,15 +584,12 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
                     },
                     out_dir / f"ckpt_epoch{epoch+1:04d}.pt",
                 )
+                _log(f"  ckpt saved → ckpt_epoch{epoch+1:04d}.pt")
 
             if stopper is not None:
                 if should_stop_ddp(stop_flag, device):
                     if is_main():
-                        print(
-                            f"[INFO] Early stop at epoch {epoch+1} "
-                            f"(best ρ={stopper.best:.4f} @ epoch {stopper.best_epoch})",
-                            flush=True,
-                        )
+                        _log(f"[INFO] Early stop @ ep{epoch+1} (best ρ={stopper.best:.4f} @ ep{stopper.best_epoch})")
                     break
 
     cleanup_ddp()
