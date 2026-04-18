@@ -1,0 +1,59 @@
+# Reproduction run 2 of ebm_weighted_cd (seed=2)
+# 목적: ρ=0.3041 재현성 확인. 설정 완전 동일, seed만 변경.
+# 모니터링 포인트: val ρ, AUROC(E), e_pos_std / e_neg_std
+#   - e_neg_std가 계속 ≈0 이면 negative 구조 문제 재진단 필요
+#
+# 실행:
+#   CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 scripts/train.py \
+#       --config configs/ebm_weighted_cd_r2.yaml --seed 2
+
+experiment:
+  name: ebm_weighted_cd_r2
+  description: "Reward-weighted CD — reproduction run 2 (seed=2)"
+  type: irl
+
+data:
+  splits_dir: data/splits
+  patch_size: 48
+  batch_size: 4
+  num_workers: 4
+
+model:
+  type: irl
+  base_ch: 32
+
+ebm:
+  sgld_steps: 60
+  sgld_step_size: 0.01
+  sgld_noise_scale: 0.01
+  replay_buffer_size: 10000
+  replay_prob: 0.95
+
+training:
+  epochs: 20
+  reward_lr: 1.0e-4
+  fm_lr: 1.0e-4
+  weight_decay: 1.0e-5
+  l2_reg: 0.1
+  energy_clamp: null
+  grad_clip: 1.0
+  reward_steps_per_iter: 3
+  fm_steps_per_iter: 10
+  policy_sample_steps: 32
+  policy_grad_steps: 2
+  reward_weight: 0.05
+  early_stop_patience: 0
+
+  reward_cd_weight: 1.0
+  reward_cd_temp: 1.0
+
+  sgld_permanent_ratio: 1.0
+  fm_gate_sep_std_threshold: 9999.0
+  fm_gate_consecutive: 999
+  fm_gate_check_interval: 50
+  sep_std_ema_alpha: 0.1
+
+logging:
+  log_interval: 10
+  save_interval: 1
+  output_dir: outputs/ebm_weighted_cd_r2
