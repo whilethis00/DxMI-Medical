@@ -231,17 +231,31 @@ def train_ebm_only(cfg: dict, device: torch.device, resume_path: str = None):
     save_interval = cfg["logging"]["save_interval"]
     patience      = cfg["training"].get("early_stop_patience", 0)
     stopper       = EarlyStopper(patience) if patience > 0 else None
+    total_epochs  = cfg["training"]["epochs"]
 
     if is_main():
         out_dir.mkdir(parents=True, exist_ok=True)
 
+    _log_file = out_dir / "train.log"
+
+    def _log(msg: str):
+        if not is_main():
+            return
+        line = f"[{datetime.now().strftime('%H:%M:%S')}] {msg}"
+        print(line, flush=True)
+        with open(_log_file, "a") as f:
+            f.write(line + "\n")
+
     global_step = 0
 
-    for epoch in range(start_epoch, cfg["training"]["epochs"]):
+    for epoch in range(start_epoch, total_epochs):
         if is_ddp():
             loaders["train"].sampler.set_epoch(epoch)
         ebm.train()
         epoch_loss = 0.0
+
+        if is_main():
+            _log(f"{'─'*20} Epoch {epoch+1:02d}/{total_epochs} {'─'*20}")
 
         for batch in loaders["train"]:
             x = batch["patch"].to(device)
@@ -256,7 +270,6 @@ def train_ebm_only(cfg: dict, device: torch.device, resume_path: str = None):
             replay.push(x_neg)
 
             opt.zero_grad()
-            # DDP 래퍼를 통한 forward → backward 시 gradient allreduce 보장
             loss, metrics = contrastive_divergence_loss(
                 ebm, x, x_neg, l2_reg=cfg["training"]["l2_reg"]
             )
@@ -268,20 +281,17 @@ def train_ebm_only(cfg: dict, device: torch.device, resume_path: str = None):
             global_step += 1
 
             if is_main() and global_step % log_interval == 0:
-                print(
-                    f"[rank0|step {global_step}] loss={metrics['loss']:.4f} "
-                    f"cd={metrics['cd_loss']:.4f} reg={metrics['reg_loss']:.4f} "
-                    f"e_pos={metrics['e_pos']:.3f} e_neg={metrics['e_neg']:.3f} "
-                    f"e_pos_std={metrics['e_pos_std']:.3f} e_neg_std={metrics['e_neg_std']:.3f} "
-                    f"x_neg[min/mean/max]={metrics['x_neg_min']:.3f}/"
-                    f"{metrics['x_neg_mean']:.3f}/{metrics['x_neg_max']:.3f}",
-                    flush=True,
+                _log(
+                    f"[ep{epoch+1:02d}|s{global_step:04d}]  "
+                    f"loss={metrics['loss']:+.3f}  cd={metrics['cd_loss']:+.3f}  reg={metrics['reg_loss']:.3f}  │  "
+                    f"e+={metrics['e_pos']:+.2f}(±{metrics['e_pos_std']:.3f})  "
+                    f"e-={metrics['e_neg']:+.2f}(±{metrics['e_neg_std']:.3f})  │  "
+                    f"x_neg [{metrics['x_neg_min']:.2f}/{metrics['x_neg_mean']:.2f}/{metrics['x_neg_max']:.2f}]"
                 )
 
         scheduler.step()
 
         if (epoch + 1) % save_interval == 0:
-            # Validation
             ebm.eval()
             val_result = run_val(raw_ebm, loaders.get("val"), device)
             ebm.train()
@@ -291,15 +301,16 @@ def train_ebm_only(cfg: dict, device: torch.device, resume_path: str = None):
 
             if is_main():
                 avg_loss = epoch_loss / len(loaders["train"])
-                print(f"[epoch {epoch+1}] avg_loss={avg_loss:.4f}", flush=True)
                 if val_result:
-                    print(f"[epoch {epoch+1}] val: {val_result}", flush=True)
+                    clinical = "PASS ✓" if val_result.passed_clinical() else "FAIL ✗"
+                    _log(
+                        f"{'═'*10} VAL ep{epoch+1:02d} {'═'*10}  "
+                        f"ρ={val_result.rho:+.4f} (p={val_result.p_value:.4f}) [{clinical}]  "
+                        f"AUROC(E)={val_result.auroc_energy:.4f}  ECE={val_result.ece:.4f}  "
+                        f"N={val_result.n_samples}  avg_loss={avg_loss:.4f}"
+                    )
                     if stopper is not None:
-                        print(
-                            f"[epoch {epoch+1}] best_val_epoch={stopper.best_epoch} "
-                            f"best_rho={stopper.best:.4f} patience={stopper.counter}/{stopper.patience}",
-                            flush=True,
-                        )
+                        _log(f"  best so far: ρ={stopper.best:.4f} @ ep{stopper.best_epoch}")
                 save_checkpoint(
                     {
                         "epoch":     epoch,
@@ -309,16 +320,12 @@ def train_ebm_only(cfg: dict, device: torch.device, resume_path: str = None):
                     },
                     out_dir / f"ckpt_epoch{epoch+1:04d}.pt",
                 )
+                _log(f"  ckpt saved → ckpt_epoch{epoch+1:04d}.pt")
 
-            # Early stopping (all ranks must reach this together for DDP broadcast)
             if stopper is not None:
                 if should_stop_ddp(stop_flag, device):
                     if is_main():
-                        print(
-                            f"[INFO] Early stop at epoch {epoch+1} "
-                            f"(best ρ={stopper.best:.4f} @ epoch {stopper.best_epoch})",
-                            flush=True,
-                        )
+                        _log(f"[INFO] Early stop @ ep{epoch+1} (best ρ={stopper.best:.4f} @ ep{stopper.best_epoch})")
                     break
 
     cleanup_ddp()
@@ -354,25 +361,38 @@ def train_supervised(cfg: dict, device: torch.device, resume_path: str = None):
     save_interval = cfg["logging"]["save_interval"]
     patience      = cfg["training"].get("early_stop_patience", 0)
     stopper       = EarlyStopper(patience) if patience > 0 else None
+    total_epochs  = cfg["training"]["epochs"]
 
     if is_main():
         out_dir.mkdir(parents=True, exist_ok=True)
 
+    _log_file = out_dir / "train.log"
+
+    def _log(msg: str):
+        if not is_main():
+            return
+        line = f"[{datetime.now().strftime('%H:%M:%S')}] {msg}"
+        print(line, flush=True)
+        with open(_log_file, "a") as f:
+            f.write(line + "\n")
+
     global_step = 0
 
-    for epoch in range(start_epoch, cfg["training"]["epochs"]):
+    for epoch in range(start_epoch, total_epochs):
         if is_ddp():
             loaders["train"].sampler.set_epoch(epoch)
         ebm.train()
         epoch_loss = 0.0
 
+        if is_main():
+            _log(f"{'─'*20} Epoch {epoch+1:02d}/{total_epochs} {'─'*20}")
+
         for batch in loaders["train"]:
             x       = batch["patch"].to(device)
-            mal_var = batch["malignancy_var"].to(device)  # GT 불확실성 레이블
+            mal_var = batch["malignancy_var"].to(device)
 
             opt.zero_grad()
-            energy = ebm(x)  # (B,)
-            # MSE: 높은 disagreement → 높은 energy 학습
+            energy = ebm(x)
             mse_loss = F.mse_loss(energy, mal_var)
             reg_loss = cfg["training"]["l2_reg"] * (energy ** 2).mean()
             loss     = mse_loss + reg_loss
@@ -385,10 +405,9 @@ def train_supervised(cfg: dict, device: torch.device, resume_path: str = None):
             global_step += 1
 
             if is_main() and global_step % log_interval == 0:
-                print(
-                    f"[rank0|step {global_step}] loss={loss.item():.4f} "
-                    f"mse={mse_loss.item():.4f}",
-                    flush=True,
+                _log(
+                    f"[ep{epoch+1:02d}|s{global_step:04d}]  "
+                    f"loss={loss.item():+.4f}  mse={mse_loss.item():.4f}  reg={reg_loss.item():.4f}"
                 )
 
         scheduler.step()
@@ -403,15 +422,16 @@ def train_supervised(cfg: dict, device: torch.device, resume_path: str = None):
 
             if is_main():
                 avg_loss = epoch_loss / len(loaders["train"])
-                print(f"[epoch {epoch+1}] avg_loss={avg_loss:.4f}", flush=True)
                 if val_result:
-                    print(f"[epoch {epoch+1}] val: {val_result}", flush=True)
+                    clinical = "PASS ✓" if val_result.passed_clinical() else "FAIL ✗"
+                    _log(
+                        f"{'═'*10} VAL ep{epoch+1:02d} {'═'*10}  "
+                        f"ρ={val_result.rho:+.4f} (p={val_result.p_value:.4f}) [{clinical}]  "
+                        f"AUROC(E)={val_result.auroc_energy:.4f}  ECE={val_result.ece:.4f}  "
+                        f"N={val_result.n_samples}  avg_loss={avg_loss:.4f}"
+                    )
                     if stopper is not None:
-                        print(
-                            f"[epoch {epoch+1}] best_val_epoch={stopper.best_epoch} "
-                            f"best_rho={stopper.best:.4f} patience={stopper.counter}/{stopper.patience}",
-                            flush=True,
-                        )
+                        _log(f"  best so far: ρ={stopper.best:.4f} @ ep{stopper.best_epoch}")
                 save_checkpoint(
                     {
                         "epoch":     epoch,
@@ -421,15 +441,12 @@ def train_supervised(cfg: dict, device: torch.device, resume_path: str = None):
                     },
                     out_dir / f"ckpt_epoch{epoch+1:04d}.pt",
                 )
+                _log(f"  ckpt saved → ckpt_epoch{epoch+1:04d}.pt")
 
             if stopper is not None:
                 if should_stop_ddp(stop_flag, device):
                     if is_main():
-                        print(
-                            f"[INFO] Early stop at epoch {epoch+1} "
-                            f"(best ρ={stopper.best:.4f} @ epoch {stopper.best_epoch})",
-                            flush=True,
-                        )
+                        _log(f"[INFO] Early stop @ ep{epoch+1} (best ρ={stopper.best:.4f} @ ep{stopper.best_epoch})")
                     break
 
     cleanup_ddp()
