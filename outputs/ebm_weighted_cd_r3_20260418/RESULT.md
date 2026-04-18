@@ -46,8 +46,9 @@ Reward-weighted CD — reproduction run 3 (seed=3)
 | epoch 17 | `[epoch 17] val: N=177 | Spearman ρ=0.2844 (p=0.0001, PASS) | AUROC(-E)=0.3064 | AUROC(E)=0.6936 | ECE=0.7944` |
 | epoch 18 | `[epoch 18] val: N=177 | Spearman ρ=0.2815 (p=0.0001, PASS) | AUROC(-E)=0.2852 | AUROC(E)=0.7148 | ECE=0.7951` |
 | epoch 19 | `[epoch 19] val: N=177 | Spearman ρ=0.1568 (p=0.0372, PASS) | AUROC(-E)=0.3022 | AUROC(E)=0.6978 | ECE=0.7871` |
+| epoch 20 | `[epoch 20] val: N=177 | Spearman ρ=0.2946 (p=0.0001, PASS) | AUROC(-E)=0.2926 | AUROC(E)=0.7074 | ECE=0.7934` |
 
-**최종 val**: `[epoch 19] val: N=177 | Spearman ρ=0.1568 (p=0.0372, PASS) | AUROC(-E)=0.3022 | AUROC(E)=0.6978 | ECE=0.7871`
+**최종 val**: `[epoch 20] val: N=177 | Spearman ρ=0.2946 (p=0.0001, PASS) | AUROC(-E)=0.2926 | AUROC(E)=0.7074 | ECE=0.7934`
 
 ## 가설 달성 여부
 

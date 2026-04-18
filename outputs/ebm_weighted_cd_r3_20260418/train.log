@@ -420,3 +420,6 @@
 [rank0|step 3780] reward_loss=-5.0262 cd_loss=-10.0877 reg_loss=5.0615 e_pos=-4.9717 e_neg=5.0357 e_pos_std=0.7215 e_neg_std=0.0236 reward_grad_norm=1.9658 fm_sample_energy=-17.1332 sep_std_ema=34.3045 fm_enabled=0.0000 rw_min=0.1591 rw_entropy=1.3586 fm_loss=0.1120 policy_energy=-29.9137 policy_grad_norm=0.2985 policy_term_grad_norm=0.2812 reward_term_grad_norm=0.2148
 [rank0|step 3790] reward_loss=-4.9339 cd_loss=-10.8964 reg_loss=5.9625 e_pos=-5.9093 e_neg=4.9529 e_pos_std=0.4027 e_neg_std=0.0212 reward_grad_norm=6.7099 fm_sample_energy=-18.4025 sep_std_ema=39.1924 fm_enabled=0.0000 rw_min=0.1559 rw_entropy=1.3540 fm_loss=0.0781 policy_energy=-29.0327 policy_grad_norm=0.3613 policy_term_grad_norm=0.3845 reward_term_grad_norm=0.2257
 [rank0|step 3800] reward_loss=-5.0003 cd_loss=-10.5443 reg_loss=5.5440 e_pos=-5.4700 e_neg=5.0101 e_pos_std=0.6401 e_neg_std=0.0190 reward_grad_norm=4.3513 fm_sample_energy=-15.3503 sep_std_ema=43.1041 fm_enabled=0.0000 rw_min=0.1605 rw_entropy=1.3586 fm_loss=0.0628 policy_energy=-26.2230 policy_grad_norm=0.3368 policy_term_grad_norm=0.2533 reward_term_grad_norm=0.2227
+[epoch 20] checkpoint saved
+[epoch 20] val: N=177 | Spearman ρ=0.2946 (p=0.0001, PASS) | AUROC(-E)=0.2926 | AUROC(E)=0.7074 | ECE=0.7934
+[epoch 20] best_val updated: rho=0.2946 → ckpt_best_val.pt
