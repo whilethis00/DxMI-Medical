@@ -1,0 +1,141 @@
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+[INFO] device=cuda:0, world_size=2
+[rank0|step 50] loss=0.9699 e_pos=-6.036 e_neg=-2.653
+[rank0|step 100] loss=-4.9895 e_pos=-5.303 e_neg=5.067
+/home/introai26/miniconda3/envs/dxmi_medical/lib/python3.10/site-packages/torch/optim/lr_scheduler.py:243: UserWarning: The epoch parameter in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the scheduler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/choose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+/home/introai26/miniconda3/envs/dxmi_medical/lib/python3.10/site-packages/torch/optim/lr_scheduler.py:243: UserWarning: The epoch parameter in `scheduler.step()` was not necessary and is being deprecated where possible. Please use `scheduler.step()` to step the scheduler. During the deprecation, if epoch is different from None, the closed form is used instead of the new chainable form, where available. Please open an issue if you are unable to replicate your use case: https://github.com/pytorch/pytorch/issues/new/choose.
+  warnings.warn(EPOCH_DEPRECATION_WARNING, UserWarning)
+[rank0|step 150] loss=-4.9994 e_pos=-4.949 e_neg=4.965
+[rank0|step 200] loss=-5.0000 e_pos=-5.004 e_neg=5.004
+[epoch 10] avg_loss=-5.0000
+[epoch 10] val: N=177 | Spearman ρ=-0.0874 (p=0.2474, FAIL) | AUROC=0.6113 | ECE=0.7956
+[rank0|step 250] loss=-5.0000 e_pos=-4.992 e_neg=5.000
+[rank0|step 300] loss=-5.0000 e_pos=-5.003 e_neg=4.999
+[rank0|step 350] loss=-5.0000 e_pos=-5.005 e_neg=5.013
+[rank0|step 400] loss=-5.0000 e_pos=-5.001 e_neg=4.994
+[rank0|step 450] loss=-5.0000 e_pos=-5.000 e_neg=4.997
+[epoch 20] avg_loss=-5.0000
+[epoch 20] val: N=177 | Spearman ρ=-0.0839 (p=0.2671, FAIL) | AUROC=0.5979 | ECE=0.7956
+[rank0|step 500] loss=-5.0000 e_pos=-5.000 e_neg=4.994
+[rank0|step 550] loss=-5.0000 e_pos=-4.997 e_neg=4.998
+[rank0|step 600] loss=-5.0000 e_pos=-5.003 e_neg=4.997
+[rank0|step 650] loss=-5.0000 e_pos=-5.002 e_neg=4.994
+[epoch 30] avg_loss=-4.9999
+[epoch 30] val: N=177 | Spearman ρ=-0.0892 (p=0.2375, FAIL) | AUROC=0.5701 | ECE=0.7956
+[rank0|step 700] loss=-5.0000 e_pos=-5.001 e_neg=5.008
+[rank0|step 750] loss=-5.0000 e_pos=-4.996 e_neg=5.006
+[rank0|step 800] loss=-5.0000 e_pos=-5.001 e_neg=4.995
+[rank0|step 850] loss=-5.0000 e_pos=-4.998 e_neg=4.984
+[rank0|step 900] loss=-5.0000 e_pos=-4.996 e_neg=5.012
+[epoch 40] avg_loss=-4.9999
+[epoch 40] val: N=177 | Spearman ρ=-0.0686 (p=0.3645, FAIL) | AUROC=0.5541 | ECE=0.7956
+[rank0|step 950] loss=-5.0000 e_pos=-4.997 e_neg=5.011
+[rank0|step 1000] loss=-5.0000 e_pos=-5.001 e_neg=4.998
+[rank0|step 1050] loss=-5.0000 e_pos=-5.004 e_neg=5.011
+[rank0|step 1100] loss=-5.0000 e_pos=-4.996 e_neg=4.994
+[rank0|step 1150] loss=-4.9999 e_pos=-5.002 e_neg=4.977
+[epoch 50] avg_loss=-5.0000
+[epoch 50] val: N=177 | Spearman ρ=-0.0579 (p=0.4436, FAIL) | AUROC=0.5465 | ECE=0.7956
+[rank0|step 1200] loss=-5.0000 e_pos=-5.000 e_neg=4.998
+[rank0|step 1250] loss=-5.0000 e_pos=-4.999 e_neg=4.994
+[rank0|step 1300] loss=-5.0000 e_pos=-5.002 e_neg=4.985
+[rank0|step 1350] loss=-5.0000 e_pos=-4.997 e_neg=5.003
+[epoch 60] avg_loss=-5.0000
+[epoch 60] val: N=177 | Spearman ρ=-0.0471 (p=0.5337, FAIL) | AUROC=0.5312 | ECE=0.7956
+[rank0|step 1400] loss=-5.0000 e_pos=-4.997 e_neg=4.995
+[rank0|step 1450] loss=-5.0000 e_pos=-5.004 e_neg=4.992
+[rank0|step 1500] loss=-5.0000 e_pos=-4.998 e_neg=5.000
+[rank0|step 1550] loss=-5.0000 e_pos=-5.001 e_neg=4.991
+[rank0|step 1600] loss=-5.0000 e_pos=-5.002 e_neg=4.999
+[epoch 70] avg_loss=-5.0000
+[epoch 70] val: N=177 | Spearman ρ=-0.0559 (p=0.4597, FAIL) | AUROC=0.5387 | ECE=0.7955
+[rank0|step 1650] loss=-5.0000 e_pos=-4.995 e_neg=5.018
+[rank0|step 1700] loss=-5.0000 e_pos=-5.003 e_neg=4.993
+[rank0|step 1750] loss=-5.0000 e_pos=-4.997 e_neg=4.988
+[rank0|step 1800] loss=-5.0000 e_pos=-4.995 e_neg=5.016
+[epoch 80] avg_loss=-5.0000
+[epoch 80] val: N=177 | Spearman ρ=-0.0498 (p=0.5101, FAIL) | AUROC=0.5195 | ECE=0.7956
+[rank0|step 1850] loss=-5.0000 e_pos=-5.001 e_neg=4.989
+[rank0|step 1900] loss=-4.9999 e_pos=-4.993 e_neg=5.021
+[rank0|step 1950] loss=-5.0000 e_pos=-4.996 e_neg=4.999
+[rank0|step 2000] loss=-5.0000 e_pos=-4.996 e_neg=5.010
+[rank0|step 2050] loss=-5.0000 e_pos=-5.002 e_neg=4.992
+[epoch 90] avg_loss=-5.0000
+[epoch 90] val: N=177 | Spearman ρ=-0.0583 (p=0.4410, FAIL) | AUROC=0.5123 | ECE=0.7956
+[rank0|step 2100] loss=-5.0000 e_pos=-4.995 e_neg=5.001
+[rank0|step 2150] loss=-5.0000 e_pos=-4.999 e_neg=5.000
+[rank0|step 2200] loss=-5.0000 e_pos=-5.002 e_neg=5.001
+[rank0|step 2250] loss=-5.0000 e_pos=-5.002 e_neg=5.000
+[rank0|step 2300] loss=-5.0000 e_pos=-5.000 e_neg=4.997
+[epoch 100] avg_loss=-5.0000
+[epoch 100] val: N=177 | Spearman ρ=-0.0615 (p=0.4161, FAIL) | AUROC=0.4972 | ECE=0.7956
+[rank0|step 2350] loss=-5.0000 e_pos=-5.001 e_neg=4.997
+[rank0|step 2400] loss=-5.0000 e_pos=-4.998 e_neg=4.997
+[rank0|step 2450] loss=-5.0000 e_pos=-4.999 e_neg=4.997
+[rank0|step 2500] loss=-5.0000 e_pos=-4.998 e_neg=4.998
+[epoch 110] avg_loss=-5.0000
+[epoch 110] val: N=177 | Spearman ρ=-0.0614 (p=0.4166, FAIL) | AUROC=0.4821 | ECE=0.7956
+[rank0|step 2550] loss=-5.0000 e_pos=-5.003 e_neg=5.002
+[rank0|step 2600] loss=-5.0000 e_pos=-4.997 e_neg=5.002
+[rank0|step 2650] loss=-5.0000 e_pos=-4.998 e_neg=5.002
+[rank0|step 2700] loss=-5.0000 e_pos=-4.999 e_neg=4.996
+[rank0|step 2750] loss=-5.0000 e_pos=-5.004 e_neg=4.999
+[epoch 120] avg_loss=-5.0000
+[epoch 120] val: N=177 | Spearman ρ=-0.0618 (p=0.4139, FAIL) | AUROC=0.5003 | ECE=0.7956
+[rank0|step 2800] loss=-5.0000 e_pos=-5.000 e_neg=4.997
+[rank0|step 2850] loss=-5.0000 e_pos=-5.000 e_neg=4.998
+[rank0|step 2900] loss=-5.0000 e_pos=-4.997 e_neg=5.000
+[rank0|step 2950] loss=-5.0000 e_pos=-5.003 e_neg=5.001
+[epoch 130] avg_loss=-5.0000
+[epoch 130] val: N=177 | Spearman ρ=-0.0708 (p=0.3490, FAIL) | AUROC=0.4757 | ECE=0.7956
+[rank0|step 3000] loss=-5.0000 e_pos=-4.999 e_neg=4.999
+[rank0|step 3050] loss=-5.0000 e_pos=-4.999 e_neg=4.998
+[rank0|step 3100] loss=-5.0000 e_pos=-5.000 e_neg=4.999
+[rank0|step 3150] loss=-5.0000 e_pos=-5.002 e_neg=5.001
+[rank0|step 3200] loss=-5.0000 e_pos=-4.998 e_neg=5.001
+[epoch 140] avg_loss=-5.0000
+[epoch 140] val: N=177 | Spearman ρ=-0.0788 (p=0.2971, FAIL) | AUROC=0.4697 | ECE=0.7956
+[rank0|step 3250] loss=-5.0000 e_pos=-5.000 e_neg=4.999
+[rank0|step 3300] loss=-5.0000 e_pos=-4.998 e_neg=4.999
+[rank0|step 3350] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 3400] loss=-5.0000 e_pos=-4.999 e_neg=4.998
+[rank0|step 3450] loss=-5.0000 e_pos=-5.000 e_neg=4.999
+[epoch 150] avg_loss=-5.0000
+[epoch 150] val: N=177 | Spearman ρ=-0.0781 (p=0.3015, FAIL) | AUROC=0.4821 | ECE=0.7956
+[rank0|step 3500] loss=-5.0000 e_pos=-5.000 e_neg=4.999
+[rank0|step 3550] loss=-5.0000 e_pos=-5.000 e_neg=5.001
+[rank0|step 3600] loss=-5.0000 e_pos=-4.999 e_neg=5.000
+[rank0|step 3650] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[epoch 160] avg_loss=-5.0000
+[epoch 160] val: N=177 | Spearman ρ=-0.0722 (p=0.3395, FAIL) | AUROC=0.4890 | ECE=0.7956
+[rank0|step 3700] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 3750] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 3800] loss=-5.0000 e_pos=-5.000 e_neg=5.001
+[rank0|step 3850] loss=-5.0000 e_pos=-4.999 e_neg=5.000
+[rank0|step 3900] loss=-5.0000 e_pos=-5.000 e_neg=4.999
+[epoch 170] avg_loss=-5.0000
+[epoch 170] val: N=177 | Spearman ρ=-0.0817 (p=0.2799, FAIL) | AUROC=0.4771 | ECE=0.7956
+[rank0|step 3950] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 4000] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 4050] loss=-5.0000 e_pos=-4.999 e_neg=5.001
+[rank0|step 4100] loss=-5.0000 e_pos=-5.001 e_neg=5.001
+[epoch 180] avg_loss=-5.0000
+[epoch 180] val: N=177 | Spearman ρ=-0.0827 (p=0.2736, FAIL) | AUROC=0.4741 | ECE=0.7956
+[rank0|step 4150] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 4200] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 4250] loss=-5.0000 e_pos=-5.001 e_neg=5.000
+[rank0|step 4300] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 4350] loss=-5.0000 e_pos=-5.000 e_neg=4.999
+[epoch 190] avg_loss=-5.0000
+[epoch 190] val: N=177 | Spearman ρ=-0.0809 (p=0.2843, FAIL) | AUROC=0.4717 | ECE=0.7956
+[rank0|step 4400] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 4450] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 4500] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 4550] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[rank0|step 4600] loss=-5.0000 e_pos=-5.000 e_neg=5.000
+[epoch 200] avg_loss=-5.0000
+[epoch 200] val: N=177 | Spearman ρ=-0.0814 (p=0.2814, FAIL) | AUROC=0.4758 | ECE=0.7956
