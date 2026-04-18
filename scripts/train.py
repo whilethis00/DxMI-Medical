@@ -486,6 +486,7 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
     save_interval = cfg["logging"]["save_interval"]
     patience      = cfg["training"].get("early_stop_patience", 0)
     stopper       = EarlyStopper(patience) if patience > 0 else None
+    save_best_val = cfg["logging"].get("save_best_val", False)
 
     if is_main():
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -500,6 +501,7 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
             f.write(msg + "\n")
 
     global_step = 0
+    best_val_rho = -float("inf")
 
     for epoch in range(start_epoch, cfg["training"]["epochs"]):
         if is_ddp():
@@ -534,6 +536,17 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
                             f"[epoch {epoch+1}] best_val_epoch={stopper.best_epoch} "
                             f"best_rho={stopper.best:.4f} patience={stopper.counter}/{stopper.patience}"
                         )
+                    if save_best_val and val_result.rho > best_val_rho:
+                        best_val_rho = val_result.rho
+                        save_checkpoint(
+                            {
+                                "epoch": epoch,
+                                "ebm":   raw_ebm.state_dict(),
+                                "vf":    irl._raw_vf.state_dict(),
+                            },
+                            out_dir / "ckpt_best_val.pt",
+                        )
+                        _log(f"[epoch {epoch+1}] best_val updated: rho={best_val_rho:.4f} → ckpt_best_val.pt")
                 save_checkpoint(
                     {
                         "epoch": epoch,
