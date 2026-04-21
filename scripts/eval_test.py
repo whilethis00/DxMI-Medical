@@ -42,7 +42,8 @@ from torch.utils.data import DataLoader
 def load_ebm(ckpt_path: Path, base_ch: int, device: torch.device) -> EBM:
     model = EBM(base_ch=base_ch).to(device)
     ckpt = torch.load(ckpt_path, map_location=device)
-    state = ckpt.get("ebm", ckpt)  # IRL ckpt는 "ebm" 키, EBM-only ckpt는 flat
+    # IRL ckpt → "ebm" 키, train.py ckpt → "model" 키, EBM-only ckpt → flat
+    state = ckpt.get("ebm", ckpt.get("model", ckpt))
     model.load_state_dict(state)
     model.eval()
     return model

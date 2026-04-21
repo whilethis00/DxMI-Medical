@@ -1,0 +1,209 @@
+[INFO] device: cuda
+[step 50] loss=-0.4907 e_pos=-0.511 e_neg=0.571
+[step 100] loss=-0.4991 e_pos=-0.503 e_neg=0.476
+[step 150] loss=-0.4991 e_pos=-0.502 e_neg=0.494
+[step 200] loss=-0.4999 e_pos=-0.490 e_neg=0.503
+[step 250] loss=-0.4993 e_pos=-0.508 e_neg=0.501
+[step 300] loss=-0.4976 e_pos=-0.478 e_neg=0.542
+[step 350] loss=-0.4999 e_pos=-0.503 e_neg=0.495
+[step 400] loss=-0.5000 e_pos=-0.499 e_neg=0.499
+[step 450] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[epoch 10] avg_loss=-0.4994
+[step 500] loss=-0.4999 e_pos=-0.492 e_neg=0.494
+[step 550] loss=-0.4999 e_pos=-0.496 e_neg=0.503
+[step 600] loss=-0.5000 e_pos=-0.496 e_neg=0.500
+[step 650] loss=-0.4995 e_pos=-0.521 e_neg=0.503
+[step 700] loss=-0.4999 e_pos=-0.500 e_neg=0.502
+[step 750] loss=-0.4957 e_pos=-0.497 e_neg=0.469
+[step 800] loss=-0.4979 e_pos=-0.479 e_neg=0.540
+[step 850] loss=-0.5000 e_pos=-0.499 e_neg=0.503
+[step 900] loss=-0.4999 e_pos=-0.497 e_neg=0.492
+[epoch 20] avg_loss=-0.4985
+[step 950] loss=-0.4999 e_pos=-0.503 e_neg=0.508
+[step 1000] loss=-0.4995 e_pos=-0.487 e_neg=0.487
+[step 1050] loss=-0.4997 e_pos=-0.498 e_neg=0.516
+[step 1100] loss=-0.5000 e_pos=-0.498 e_neg=0.498
+[step 1150] loss=-0.4986 e_pos=-0.532 e_neg=0.498
+[step 1200] loss=-0.4981 e_pos=-0.499 e_neg=0.486
+[step 1250] loss=-0.5000 e_pos=-0.498 e_neg=0.500
+[step 1300] loss=-0.4999 e_pos=-0.496 e_neg=0.495
+[step 1350] loss=-0.5000 e_pos=-0.500 e_neg=0.498
+[step 1400] loss=-0.5000 e_pos=-0.501 e_neg=0.500
+[epoch 30] avg_loss=-0.5000
+[step 1450] loss=-0.4995 e_pos=-0.518 e_neg=0.511
+[step 1500] loss=-0.4999 e_pos=-0.494 e_neg=0.498
+[step 1550] loss=-0.5000 e_pos=-0.499 e_neg=0.500
+[step 1600] loss=-0.4706 e_pos=-0.502 e_neg=0.473
+[step 1650] loss=-0.5000 e_pos=-0.498 e_neg=0.501
+[step 1700] loss=-0.5000 e_pos=-0.501 e_neg=0.499
+[step 1750] loss=-0.5000 e_pos=-0.505 e_neg=0.500
+[step 1800] loss=-0.4999 e_pos=-0.492 e_neg=0.501
+[step 1850] loss=-0.5000 e_pos=-0.497 e_neg=0.497
+[epoch 40] avg_loss=-0.4985
+[step 1900] loss=-0.4996 e_pos=-0.490 e_neg=0.514
+[step 1950] loss=-0.4999 e_pos=-0.506 e_neg=0.500
+[step 2000] loss=-0.5000 e_pos=-0.499 e_neg=0.501
+[step 2050] loss=-0.5000 e_pos=-0.499 e_neg=0.499
+[step 2100] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 2150] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 2200] loss=-0.5000 e_pos=-0.498 e_neg=0.499
+[step 2250] loss=-0.4998 e_pos=-0.497 e_neg=0.513
+[step 2300] loss=-0.5000 e_pos=-0.500 e_neg=0.498
+[step 2350] loss=-0.4807 e_pos=-0.498 e_neg=0.476
+[epoch 50] avg_loss=-0.4989
+[step 2400] loss=-0.5000 e_pos=-0.501 e_neg=0.501
+[step 2450] loss=-0.4995 e_pos=-0.519 e_neg=0.495
+[step 2500] loss=-0.5000 e_pos=-0.502 e_neg=0.501
+[step 2550] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[step 2600] loss=-0.4980 e_pos=-0.495 e_neg=0.502
+[step 2650] loss=-0.4999 e_pos=-0.494 e_neg=0.498
+[step 2700] loss=-0.5000 e_pos=-0.501 e_neg=0.501
+[step 2750] loss=-0.5000 e_pos=-0.501 e_neg=0.500
+[step 2800] loss=-0.4998 e_pos=-0.513 e_neg=0.500
+[epoch 60] avg_loss=-0.4989
+[step 2850] loss=-0.5000 e_pos=-0.497 e_neg=0.503
+[step 2900] loss=-0.4997 e_pos=-0.483 e_neg=0.502
+[step 2950] loss=-0.5000 e_pos=-0.499 e_neg=0.500
+[step 3000] loss=-0.5000 e_pos=-0.498 e_neg=0.496
+[step 3050] loss=-0.5000 e_pos=-0.501 e_neg=0.499
+[step 3100] loss=-0.5000 e_pos=-0.501 e_neg=0.499
+[step 3150] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 3200] loss=-0.4998 e_pos=-0.494 e_neg=0.491
+[step 3250] loss=-0.5000 e_pos=-0.501 e_neg=0.500
+[epoch 70] avg_loss=-0.5000
+[step 3300] loss=-0.5000 e_pos=-0.501 e_neg=0.499
+[step 3350] loss=-0.4998 e_pos=-0.488 e_neg=0.492
+[step 3400] loss=-0.4999 e_pos=-0.495 e_neg=0.503
+[step 3450] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[step 3500] loss=-0.5000 e_pos=-0.499 e_neg=0.500
+[step 3550] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 3600] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[step 3650] loss=-0.5000 e_pos=-0.501 e_neg=0.500
+[step 3700] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 3750] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[epoch 80] avg_loss=-0.5000
+[step 3800] loss=-0.4996 e_pos=-0.488 e_neg=0.501
+[step 3850] loss=-0.4999 e_pos=-0.494 e_neg=0.501
+[step 3900] loss=-0.5000 e_pos=-0.498 e_neg=0.500
+[step 3950] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4000] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4050] loss=-0.5000 e_pos=-0.499 e_neg=0.500
+[step 4100] loss=-0.5000 e_pos=-0.499 e_neg=0.500
+[step 4150] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4200] loss=-0.5000 e_pos=-0.501 e_neg=0.500
+[epoch 90] avg_loss=-0.5000
+[step 4250] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[step 4300] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4350] loss=-0.5000 e_pos=-0.499 e_neg=0.500
+[step 4400] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4450] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4500] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4550] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[step 4600] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4650] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4700] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[epoch 100] avg_loss=-0.5000
+[step 4750] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[step 4800] loss=-0.5000 e_pos=-0.501 e_neg=0.500
+[step 4850] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4900] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 4950] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 5000] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 5050] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 5100] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[step 5150] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[epoch 110] avg_loss=-0.5000
+[step 5200] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 5250] loss=-0.5000 e_pos=-0.499 e_neg=0.500
+[step 5300] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[step 5350] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 5400] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 5450] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[step 5500] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[step 5550] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 5600] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[epoch 120] avg_loss=-0.5000
+[step 5650] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 5700] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[step 5750] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 5800] loss=-0.5000 e_pos=-0.499 e_neg=0.501
+[step 5850] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[step 5900] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 5950] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6000] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6050] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[step 6100] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[epoch 130] avg_loss=-0.5000
+[step 6150] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6200] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[step 6250] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6300] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6350] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[step 6400] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[step 6450] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6500] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6550] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[epoch 140] avg_loss=-0.5000
+[step 6600] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6650] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6700] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[step 6750] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6800] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6850] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[step 6900] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 6950] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7000] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7050] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[epoch 150] avg_loss=-0.5000
+[step 7100] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7150] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7200] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7250] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7300] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7350] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7400] loss=-0.5000 e_pos=-0.500 e_neg=0.501
+[step 7450] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7500] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[epoch 160] avg_loss=-0.5000
+[step 7550] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7600] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7650] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7700] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7750] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7800] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7850] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 7900] loss=-0.5000 e_pos=-0.500 e_neg=0.499
+[step 7950] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[epoch 170] avg_loss=-0.5000
+[step 8000] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8050] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8100] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8150] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8200] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8250] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8300] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8350] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8400] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8450] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[epoch 180] avg_loss=-0.5000
+[step 8500] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8550] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8600] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8650] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8700] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8750] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8800] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8850] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 8900] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[epoch 190] avg_loss=-0.5000
+[step 8950] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 9000] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 9050] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 9100] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 9150] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 9200] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 9250] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 9300] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 9350] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[step 9400] loss=-0.5000 e_pos=-0.500 e_neg=0.500
+[epoch 200] avg_loss=-0.5000

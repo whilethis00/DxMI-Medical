@@ -1,0 +1,18 @@
+[INFO] device=cuda:0, world_size=4
+NCCL version 2.21.5+cuda12.4
+
+ece-tgpu1:2469:2605 [0] misc/ibvwrap.cc:113 NCCL WARN Call to ibv_open_device failed
+
+ece-tgpu1:2469:2605 [0] transport/net_ib.cc:426 NCCL WARN NET/IB : Unable to open device mlx5_0
+
+ece-tgpu1:2470:2607 [1] misc/ibvwrap.cc:113 NCCL WARN Call to ibv_open_device failed
+
+ece-tgpu1:2470:2607 [1] transport/net_ib.cc:426 NCCL WARN NET/IB : Unable to open device mlx5_0
+
+ece-tgpu1:2469:2605 [0] misc/ibvwrap.cc:113 NCCL WARN Call to ibv_open_device failed
+
+ece-tgpu1:2469:2605 [0] transport/net_ib.cc:426 NCCL WARN NET/IB : Unable to open device mlx5_1
+
+ece-tgpu1:2470:2607 [1] misc/ibvwrap.cc:113 NCCL WARN Call to ibv_open_device failed
+
+ece-tgpu1:2470:2607 [1] transport/net_ib.cc:426 NCCL WARN NET/IB : Unable to open device mlx5_1

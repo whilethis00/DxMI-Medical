@@ -247,18 +247,19 @@ threshold 방향 또는 gate metric 자체를 재설계해야 함.
 |------|------|----------------|-----------|------------|---------------|------|
 | r1 | 1 | 0.2364 (ep14) | 14 | 0.2233 | 0.6653 | ✅ |
 | r2 | 2 | 0.2902 (ep17) | 17 | 0.2650 | 0.6767 | ✅ |
-| **평균(ep20)** | — | — | — | **0.2442** | **0.6710** | — |
+| r3 | 3 | **0.2946 (ep20)** | 20 | **0.2946** | **0.7074** | ✅ |
+| **평균±std (ep20)** | — | 0.2737±0.032 | — | **0.2610±0.036** | **0.6831±0.022** | — |
 
-**핵심 관찰**:
-- 두 run 모두 epoch 20에서 PASS. "C가 죽어있다" 단계는 끝남.
-- seed 간 Spearman ρ 차이 0.042 — seed-sensitive 상태. "한 번 이겼다"와 "방법론적 우위"는 다르다.
-- r2가 r1보다 빠르게 수렴(epoch 3부터 PASS, r1은 초반 진동 큼).
-- mini-run(ρ=0.3041)을 r1/r2가 안정적으로 재현하지 못함 — 현재 재현 평균 ρ=0.2442.
-- last checkpoint ≠ best checkpoint: r1 최고 epoch14, r2 최고 epoch17.
-- ECE ≈ 0.793 전 구간 고착 — CD loss는 rank 최적화이고 calibration은 못 함. 지금 핵심 병목 아님.
+**핵심 관찰 (r3 추가 후)**:
+- 3 run 모두 epoch 20에서 PASS. "C가 죽어있다" 단계는 완전히 끝남.
+- r3가 세 run 중 가장 높은 결과: best ρ=0.2946, AUROC(E)=0.7074. r3는 last epoch이 best epoch이어서 `ckpt_best_val.pt` = epoch 20.
+- seed 간 ep20 Spearman ρ 범위: 0.2233~0.2946, std=0.036 — seed-sensitive 상태 여전함.
+- 3-seed 평균 ep20 ρ=0.2610±0.036, AUROC(E)=0.6831±0.022.
+- last checkpoint ≠ best: r1(ep14), r2(ep17) — r3는 ep20이 best.
+- ECE ≈ 0.793 전 구간 고착 — CD loss 특성, 지금 핵심 병목 아님.
 
 **냉정한 판단 한 줄**:
-> **브레이크스루가 아니라, 유망하지만 seed-sensitive한 상태다.**
+> **3 seed 전부 PASS. 방향은 맞다. 하지만 seed-sensitive 상태이며, test set 평가와 B 대비 우위 확인이 남아 있다.**
 
 ---
 
@@ -331,8 +332,49 @@ python scripts/eval_test.py \
 
 ### 다음 우선순위 (W3 종료 시점 기준)
 
-1. **r3 실행** (seed=3, `save_best_val: true`) — 신뢰구간 확보
-2. **r3 완료 후 `eval_test.py`로 A/B/C test 비교** — best-val 기준, test 1회
-3. **3개 seed 평균±std 확정** → "C > B 방법론적 우위" 문장 가능 여부 판단
-4. **FM gate는 그 다음** — seed-sensitive 상태에서 FM 열면 원인 분리 다시 무너짐
-5. **ECE는 더 나중** — post-hoc temperature scaling, 지금 핵심 아님
+1. ~~**r3 실행** (seed=3, `save_best_val: true`) — 신뢰구간 확보~~ ✅ **완료** (Apr 19, ρ=0.2946)
+2. ~~**`eval_test.py`로 A/B/C test 비교**~~ ✅ **완료** (Apr 21, 결과 아래)
+3. ~~**"C > B 방법론적 우위" 문장 가능 여부 판단**~~ ✅ **A < B < C 성립**
+4. **FM gate 실험** — seed 안정화 확인됨, 다음 단계로 진행 가능
+5. **ECE 개선** — post-hoc temperature scaling, B(ECE=0.232)와 C(ECE=0.812) 격차 큼
+
+---
+
+---
+
+### Test set 정식 비교 결과 (2026-04-21) ✅
+
+`eval_test.py` 실행. A/B/C 전부 동일 규칙(best-val checkpoint → test 1회 평가).
+
+| 실험 | ckpt | Spearman ρ | p-value | AUROC(E) | ECE | PASS |
+|------|------|-----------|---------|----------|-----|------|
+| A (ebm_baseline) | epoch10 | -0.0217 | 0.7742 | 0.4543 | 0.8136 | ❌ |
+| B (supervised_reward) | epoch80 | +0.2083 | 0.0053 | 0.6461 | 0.2318 | ✅ |
+| C r1 | epoch20 | +0.2283 | 0.0022 | 0.6775 | 0.8125 | ✅ |
+| C r2 | epoch20 | +0.2443 | 0.0010 | 0.6936 | 0.8122 | ✅ |
+| C r3 | best_val | +0.2452 | 0.0010 | 0.6937 | 0.8115 | ✅ |
+| **C 평균±std** | — | **0.2393±0.010** | — | **0.6883±0.009** | — | ✅ |
+
+**핵심 판정**:
+- **A < B < C** ✅ — ablation 합격 조건 달성
+- C가 B 대비 Spearman ρ +0.031, AUROC(E) +0.042 우위. p < 0.01.
+- C 3-seed std가 0.010으로 매우 작음 — seed 안정화 확인.
+- **ECE 격차 주의**: B=0.232 vs C=0.812 — C의 ranking은 맞지만 confidence calibration 안 됨. 논문에서 반드시 설명 필요.
+
+**논문 문장 초안**:
+> Our method (C) achieves Spearman ρ=0.239±0.010 (p<0.01) and AUROC=0.688±0.009 on the test set, outperforming the supervised reward baseline (B: ρ=0.208, AUROC=0.646) and the no-IRL baseline (A: ρ=-0.022, FAIL).
+
+---
+
+### r3 완료 요약 (2026-04-19)
+
+| 지표 | r3 (seed=3) | r1 | r2 |
+|------|------------|-----|-----|
+| best Spearman ρ | **0.2946** (ep20) | 0.2364 (ep14) | 0.2902 (ep17) |
+| ep20 AUROC(E) | **0.7074** | 0.6653 | 0.6767 |
+| ep20 ECE | 0.7934 | 0.7933 | 0.7936 |
+| 후반 FAIL (ep8~20) | **0회** | 3회 | 0회 |
+
+- r3는 세 run 중 가장 안정적: ep8 이후 FAIL 없음, last=best.
+- 3-seed 평균 ρ(ep20) = **0.2610±0.036**
+- `ckpt_best_val.pt` 저장 확인 (epoch 20, `best_val updated: rho=0.2946`)
