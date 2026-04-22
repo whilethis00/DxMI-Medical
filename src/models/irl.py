@@ -301,9 +301,10 @@ class MaxEntIRL:
             "reward_grad_norm": 0.0,
             "fm_sample_energy": 0.0,
             "sep_std_ema": 0.0,
+            "sep_std_current": 0.0,  # instantaneous sep/std (EMA 평활 전)
             "fm_enabled": 0.0,
-            "rw_min": 0.0,     # softmax weight 최솟값 — peaky 진단용
-            "rw_entropy": 0.0, # softmax weight 엔트로피 — uniform=log(B), peaky→0
+            "rw_min": 0.0,
+            "rw_entropy": 0.0,
         }
 
         for _ in range(self.cfg.reward_steps_per_iter):
@@ -312,9 +313,10 @@ class MaxEntIRL:
             # negative 샘플링 (gated hybrid)
             x_neg, neg_source = self._sample_negatives(x_demo)
 
-            # gate 체크 (SGLD phase일 때 FM quality를 별도로 측정)
+            # Phase 1: gate 체크 (FM 미투입 구간에서 FM 품질 probe)
             gate_opened = False
             fm_energy_for_log = float("nan")
+            sep_std_current   = float("nan")
             if not self._fm_enabled:
                 x_fm_probe = self._policy_sample(
                     self.cfg.fm_gate_probe_size,
@@ -327,17 +329,29 @@ class MaxEntIRL:
                 fm_energy_for_log = e_fm_probe.mean().item()
                 gate_opened = self._check_fm_gate(e_pos_probe, e_fm_probe)
                 if gate_opened:
-                    # 방금 전환됨 — 이번 step부터 hybrid 적용
                     x_neg, neg_source = self._sample_negatives(x_demo)
-            else:
-                # FM 활성화 중 — hybrid negative의 FM 부분 에너지 로깅
-                n_sgld = max(1, int(x_demo.size(0) * self.cfg.sgld_permanent_ratio))
-                with torch.no_grad():
-                    fm_energy_for_log = self.ebm(x_neg[n_sgld:]).mean().item()
 
             self.reward_opt.zero_grad()
             e_pos = self.ebm(x_demo)
             e_neg = self.ebm(x_neg)
+
+            # Phase 2: gate 이후 sep 모니터링 — 이미 계산된 e_pos/e_neg 재활용
+            # (extra forward pass 없이 FM 샘플 품질을 지속 추적)
+            if self._fm_enabled:
+                B = x_demo.size(0)
+                n_sgld = max(1, int(B * self.cfg.sgld_permanent_ratio))
+                e_fm_part   = e_neg[n_sgld:].detach()
+                e_pos_det   = e_pos.detach()
+                fm_energy_for_log = e_fm_part.mean().item()
+                sep         = (e_pos_det.mean() - e_fm_part.mean()).abs().item()
+                avg_std     = (e_pos_det.std(unbiased=False).item() +
+                               e_fm_part.std(unbiased=False).item()) / 2 + 1e-3
+                sep_std_current = sep / avg_std
+                alpha = self.cfg.sep_std_ema_alpha
+                if self._sep_std_ema == float("inf"):
+                    self._sep_std_ema = sep_std_current
+                else:
+                    self._sep_std_ema = alpha * sep_std_current + (1 - alpha) * self._sep_std_ema
 
             if self.cfg.energy_clamp is not None:
                 e_pos = e_pos.clamp(-self.cfg.energy_clamp, self.cfg.energy_clamp)
@@ -373,8 +387,9 @@ class MaxEntIRL:
                 "e_neg_std":     e_neg.std(unbiased=False).item(),
                 "reward_grad_norm": float(grad_norm),
                 "fm_sample_energy": fm_energy_for_log,
-                "sep_std_ema":   self._sep_std_ema if self._sep_std_ema != float("inf") else -1.0,
-                "fm_enabled":    float(self._fm_enabled),
+                "sep_std_ema":      self._sep_std_ema if self._sep_std_ema != float("inf") else -1.0,
+                "sep_std_current":  sep_std_current,
+                "fm_enabled":       float(self._fm_enabled),
                 "rw_min":        rw_min_val,
                 "rw_entropy":    rw_entropy_val,
             }
