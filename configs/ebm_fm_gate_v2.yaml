@@ -40,7 +40,9 @@ training:
   fm_lr: 1.0e-4
   weight_decay: 1.0e-5
   l2_reg: 0.1
-  energy_clamp: 6.0        # v1: null → v2: 6.0 (spike 방어)
+  energy_clamp: 20.0       # v1: null → v2: 20.0 (spike 방어)
+                           # 6.0은 초기화 시 EBM 출력(-30~-50)이 전부 clamped → gradient 사망
+                           # 정상 학습 구간 e±≈5이므로 20.0은 평상시 안 걸리고 spike만 잡음
   grad_clip: 1.0
   reward_steps_per_iter: 3
   fm_steps_per_iter: 10
