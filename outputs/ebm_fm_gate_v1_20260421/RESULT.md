@@ -14,9 +14,11 @@
 
 ## 2. 무엇을 검증하나
 
-**이전 실험의 문제**: ebm_weighted_cd(C)는 SGLD-only로 FM을 전혀 활용하지 않음. FM이 생성한 샘플이 negative로 투입될 때 EBM이 real vs noise를 trivially 이진 분리하는 collapse 문제(sep/std ≈ 130)가 근본 원인.
+**맥락**: 원래 C(MaxEnt IRL)는 FM 샘플을 negative로 쓰다가 EBM이 real vs noise를 trivially 이진 분리하는 collapse(sep/std ≈ 130)가 발생했음. ebm_weighted_cd(C r1~r3)는 이 문제를 우회하기 위해 **의도적으로 SGLD-only**로 돌려 "EBM + reward-weighted CD" 핵심 메커니즘이 작동하는지 먼저 검증한 것. 그 결과 A < B < C (test ρ=0.239) 성립을 확인.
 
-**이번 변경**:
+**이번 실험의 질문**: SGLD-only로 검증이 끝났으니, 이제 FM을 다시 투입해도 collapse 없이 성능을 더 올릴 수 있는가?
+
+**접근**:
 1. Gated hybrid negative: EBM이 충분히 학습된 후(sep/std EMA < threshold 연속 3회)에야 FM negative 투입
 2. SGLD 20%는 전 기간 유지해 hard negative baseline 보존
 3. FM gate 버그 수정 (`fm_gate_warmup_steps=570` 추가 — 초기 무작위 EBM에서 gate가 오작동하는 문제)
