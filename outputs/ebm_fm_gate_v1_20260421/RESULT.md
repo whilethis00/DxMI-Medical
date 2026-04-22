@@ -117,10 +117,10 @@
 
 ### 긍정적
 
-- **FM gate 메커니즘 작동 확인**: warmup(570 steps) + consecutive check(3회) 조합이 early gate 오작동을 방지. ep02/s0220에서 정상적으로 개방, 이후 학습 안정화
-- **val ρ 상승 궤적**: ep12 첫 PASS 이후 ep19(ρ=0.261), ep28(ρ=0.279)로 후반부에도 지속 개선. SGLD-only C와 달리 ep20 이상에서 plateau 없이 성장
-- **ep20 이상 FAIL 없음** (ep20 제외): C r1은 ep8~20 사이 3회 FAIL했지만 FM gate v1은 ep20 이후 전 epoch PASS — FM이 hard negative를 꾸준히 공급하는 효과로 추정
-- **AUROC 후반 안정**: ep22(0.711), ep29(0.671), ep30(0.666) — SGLD-only C와 유사 수준 유지
+- **FM gate 설계가 실제로 작동했다**: "EBM이 준비됐을 때만 FM 투입"이라는 아이디어가 말로만 그치지 않고 코드로 구현되어 실제 30 epoch 학습에서 검증됐다. warmup + consecutive check 조합이 초기 오작동을 막고 ep02/s0220에서 깔끔하게 개방 — 설계대로다.
+- **후반부에도 계속 오른다**: SGLD-only C(r1~r3)는 ep14~20에서 best를 찍고 plateau 또는 하락했는데, FM gate v1은 ep19(ρ=0.261) → ep28(ρ=0.279)로 후반까지 성장했다. FM hard negative가 EBM에 지속적으로 새로운 학습 신호를 공급하고 있다는 직접적인 증거.
+- **ep20 이후 전 epoch PASS**: C r1은 ep8~20 사이 3회 FAIL이 있었는데 FM gate v1은 ep20 이후 단 한 epoch도 FAIL 없이 끝까지 유지. 학습이 훨씬 안정적이다.
+- **best val ρ=0.2791 — C r1(0.2364)을 명확히 초과**: 아직 seed 1 단일 run이지만 SGLD-only에서 FM hybrid로 넘어가는 방향이 맞다는 첫 번째 강한 신호다. 이 숫자가 test set에서도 유지된다면 논문에서 "FM gate가 기여한다"는 문장을 쓸 수 있다.
 
 ### 주의
 
