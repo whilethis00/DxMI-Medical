@@ -668,12 +668,22 @@ def _write_result_md(cfg: dict, config_path: str, exp_dir: Path):
     print(f"[INFO] RESULT.md 생성: {result_md}", flush=True)
 
 
+def _generate_plot(exp_dir: Path):
+    """학습 완료 후 training_curves.png 자동 생성."""
+    try:
+        from scripts.plot_training import generate_plot
+        generate_plot(exp_dir)
+    except Exception as e:
+        print(f"[WARN] plot 생성 실패: {e}", flush=True)
+
+
 def _git_push_results(exp_dir: Path):
-    """RESULT.md, train.log를 git add/commit/push. 체크포인트(.pt)는 제외."""
+    """RESULT.md, train.log, training_curves.png를 git add/commit/push."""
     repo_root = Path(__file__).parent.parent
     files_to_add = [
         str(exp_dir / "RESULT.md"),
         str(exp_dir / "train.log"),
+        str(exp_dir / "training_curves.png"),
     ]
     files_to_add = [f for f in files_to_add if Path(f).exists()]
     if not files_to_add:
@@ -735,9 +745,10 @@ def main():
     else:
         train_ebm_only(cfg, device, resume_path=args.resume)
 
-    # 실험 완료 후 RESULT.md 생성 + git push (rank0만)
+    # 실험 완료 후 RESULT.md + 그래프 생성 + git push (rank0만)
     if is_main():
         _write_result_md(cfg, args.config, exp_dir)
+        _generate_plot(exp_dir)
         _git_push_results(exp_dir)
 
 
