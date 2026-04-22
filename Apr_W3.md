@@ -335,8 +335,11 @@ python scripts/eval_test.py \
 1. ~~**r3 실행** (seed=3, `save_best_val: true`) — 신뢰구간 확보~~ ✅ **완료** (Apr 19, ρ=0.2946)
 2. ~~**`eval_test.py`로 A/B/C test 비교**~~ ✅ **완료** (Apr 21, 결과 아래)
 3. ~~**"C > B 방법론적 우위" 문장 가능 여부 판단**~~ ✅ **A < B < C 성립**
-4. **FM gate 실험** — seed 안정화 확인됨, 다음 단계로 진행 가능
-5. **ECE 개선** — post-hoc temperature scaling, B(ECE=0.232)와 C(ECE=0.812) 격차 큼
+4. ~~**FM gate 실험**~~ ✅ **완료** (Apr 21, best val ρ=0.2791 ep28)
+5. **FM gate v1 test set 평가** — `eval_test.py --config configs/ebm_fm_gate_v1.yaml`
+6. **FM gate v1 seed 2, 3 재현** — C와 공정한 3-seed 비교
+7. **fm_gate_v2 설계** — gate 개방 후에도 sep_std_ema 지속 업데이트, ∇rw spike 방어 로직
+8. **ECE 개선** — post-hoc temperature scaling, B(ECE=0.232)와 C/FM gate(ECE≈0.793) 격차
 
 ---
 
@@ -363,6 +366,58 @@ python scripts/eval_test.py \
 
 **논문 문장 초안**:
 > Our method (C) achieves Spearman ρ=0.239±0.010 (p<0.01) and AUROC=0.688±0.009 on the test set, outperforming the supervised reward baseline (B: ρ=0.208, AUROC=0.646) and the no-IRL baseline (A: ρ=-0.022, FAIL).
+
+---
+
+### FM gate v1 실험 완료 (2026-04-21)
+
+#### ebm_fm_gate_v1 첫 실행 — 조기 종료 (버그)
+
+**문제**: FM gate가 epoch 1 step 40에서 너무 일찍 열림 → epoch 1 val ρ=0.052 FAIL.
+
+**원인**: EBM/FM 미학습 상태(epoch 1 초반)에서 sep_std_ema가 우연히 threshold(40) 아래로 내려가면서 gate 오작동.
+
+**수정 (2026-04-21)**:
+1. `src/models/irl.py`: `fm_gate_warmup_steps` 파라미터 추가 — 이 reward step 수 이전엔 gate 체크 자체 안 함
+2. `configs/ebm_fm_gate_v1.yaml`: `fm_gate_warmup_steps: 570` (= 약 3 epoch × reward_steps)
+
+---
+
+#### ebm_fm_gate_v1 본 실험 결과 (seed=1, 30 epochs)
+
+FM gate 개방: **ep02/s0220** (reward step ≈1100, warmup 570 통과 후 정상 개방)
+
+**epoch별 val 요약**:
+
+| epoch | ρ | AUROC(E) | ECE | 판정 |
+|-------|---|----------|-----|------|
+| 1~11 | -0.12 ~ +0.14 | 0.47~0.61 | 0.70~0.79 | 대부분 FAIL |
+| 12 | +0.1742 | 0.6044 | 0.7945 | **첫 PASS** |
+| 19 | +0.2609 | 0.6676 | 0.7954 | PASS |
+| **28** | **+0.2791** | **0.6693** | 0.7945 | **PASS ← BEST** |
+| 29 | +0.2604 | 0.6710 | 0.7900 | PASS |
+| 30 | +0.2115 | 0.6657 | 0.7936 | PASS |
+
+**이전 실험 대비**:
+| 실험 | best val ρ | best epoch |
+|------|-----------|-----------|
+| C r1 (SGLD-only) | 0.2364 | 14 |
+| C r2 | 0.2902 | 17 |
+| C r3 | 0.2946 | 20 |
+| **FM gate v1** | **0.2791** | **28** |
+
+**판정**:
+- FM gate 메커니즘 작동 확인. C r1 초과, C r2에 근접.
+- ep20 이후 FAIL 없음 (ep20 단발 이상 하락 제외) — FM hard negative의 후반 안정화 효과 추정
+- **test set 평가 아직 없음** — val 수치만으로 우위 선언 불가
+
+**남은 이슈**:
+- ∇rw 간헐적 spike (최대 624) — FM 샘플이 e_neg_std 폭발을 유발하는 step 패턴 미분석
+- ECE ≈ 0.793 고착 — B(0.232)와의 격차 여전
+- sep=32.7 고착 — gate 개방 후 sep_std_ema 업데이트 중단 (fm_gate_v2에서 해결 필요)
+- `fm_e=+nan` 로깅 공백 → **2026-04-22 코드 수정 완료** (`irl.py`: FM 활성 시 `x_neg[n_sgld:]` 에너지 로깅)
+
+**체크포인트**: `ckpt_epoch0028.pt` (best val, ρ=0.2791)
 
 ---
 

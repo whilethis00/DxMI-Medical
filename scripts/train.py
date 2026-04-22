@@ -486,6 +486,8 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
         fm_gate_consecutive   = cfg["training"].get("fm_gate_consecutive", 3),
         fm_gate_check_interval= cfg["training"].get("fm_gate_check_interval", 50),
         sep_std_ema_alpha     = cfg["training"].get("sep_std_ema_alpha", 0.1),
+        fm_gate_probe_size    = cfg["training"].get("fm_gate_probe_size", 16),
+        fm_gate_warmup_steps  = cfg["training"].get("fm_gate_warmup_steps", 0),
         reward_cd_weight      = cfg["training"].get("reward_cd_weight", 0.0),
         reward_cd_temp        = cfg["training"].get("reward_cd_temp", 1.0),
     )

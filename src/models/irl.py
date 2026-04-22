@@ -53,6 +53,8 @@ class IRLConfig:
     fm_gate_consecutive: int = 3           # 연속 N회 통과해야 전환 (noise 방지)
     fm_gate_check_interval: int = 50       # N reward steps마다 gate 체크
     sep_std_ema_alpha: float = 0.1         # sep/std EMA 스무딩 계수
+    fm_gate_probe_size: int = 16           # gate 체크용 FM probe 배치 크기 (클수록 sep_std 안정)
+    fm_gate_warmup_steps: int = 0          # 이 reward step 수 이전엔 gate 체크 자체 안 함
 
 
 class ReplayBuffer:
@@ -244,6 +246,10 @@ class MaxEntIRL:
         if self._fm_enabled:
             return False  # 이미 열림
 
+        # warm-up 기간엔 gate 체크 자체 안 함
+        if self._reward_step_count < self.cfg.fm_gate_warmup_steps:
+            return False
+
         # sep/std 계산 (현재 배치 기준)
         sep     = (e_pos.mean() - e_neg_fm.mean()).abs().item()
         avg_std = (e_pos.std(unbiased=False).item() + e_neg_fm.std(unbiased=False).item()) / 2 + 1e-3
@@ -311,7 +317,7 @@ class MaxEntIRL:
             fm_energy_for_log = float("nan")
             if not self._fm_enabled:
                 x_fm_probe = self._policy_sample(
-                    min(4, x_demo.size(0)),
+                    self.cfg.fm_gate_probe_size,
                     detach=True,
                     n_steps=self.cfg.policy_sample_steps,
                 )
@@ -323,6 +329,11 @@ class MaxEntIRL:
                 if gate_opened:
                     # 방금 전환됨 — 이번 step부터 hybrid 적용
                     x_neg, neg_source = self._sample_negatives(x_demo)
+            else:
+                # FM 활성화 중 — hybrid negative의 FM 부분 에너지 로깅
+                n_sgld = max(1, int(x_demo.size(0) * self.cfg.sgld_permanent_ratio))
+                with torch.no_grad():
+                    fm_energy_for_log = self.ebm(x_neg[n_sgld:]).mean().item()
 
             self.reward_opt.zero_grad()
             e_pos = self.ebm(x_demo)

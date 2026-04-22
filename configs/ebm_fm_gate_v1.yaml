@@ -1,0 +1,68 @@
+# FM Gate v1 실험
+# 목적: reward-weighted CD (r3 베이스) 위에 FM gate 활성화 — FM hybrid negative 효과 측정
+#
+# r1/r2/r3 로그에서 sep_std_ema 관측값: 26~52 (mean≈38)
+# 전략:
+#   - threshold=40 (관측 중앙값 기준 — 약 절반 시점에서 gate 통과 가능)
+#   - consecutive=2, check_interval=50 (연속 2회 통과 시 전환 — 너무 엄격하지 않게)
+#   - probe_size=16 (기존 4→16, sep_std 추정 노이즈 감소)
+#   - sgld_permanent_ratio=0.3 (hybrid 후에도 30% SGLD 유지 — 안정성)
+#   - epochs=30 (FM 효과 확인을 위해 10 epoch 추가)
+#
+# 실행:
+#   CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 scripts/train.py \
+#       --config configs/ebm_fm_gate_v1.yaml --seed 1
+
+experiment:
+  name: ebm_fm_gate_v1
+  description: "FM gate v1 — reward-weighted CD + FM hybrid negative (threshold=40, probe=16)"
+  type: irl
+
+data:
+  splits_dir: data/splits
+  patch_size: 48
+  batch_size: 4
+  num_workers: 4
+
+model:
+  type: irl
+  base_ch: 32
+
+ebm:
+  sgld_steps: 60
+  sgld_step_size: 0.01
+  sgld_noise_scale: 0.01
+  replay_buffer_size: 10000
+  replay_prob: 0.95
+
+training:
+  epochs: 30
+  reward_lr: 1.0e-4
+  fm_lr: 1.0e-4
+  weight_decay: 1.0e-5
+  l2_reg: 0.1
+  energy_clamp: null
+  grad_clip: 1.0
+  reward_steps_per_iter: 3
+  fm_steps_per_iter: 10
+  policy_sample_steps: 32
+  policy_grad_steps: 2
+  reward_weight: 0.05
+  early_stop_patience: 0
+
+  reward_cd_weight: 1.0
+  reward_cd_temp: 1.0
+
+  sgld_permanent_ratio: 0.3
+  fm_gate_sep_std_threshold: 40.0
+  fm_gate_consecutive: 2
+  fm_gate_check_interval: 50
+  fm_gate_probe_size: 16
+  fm_gate_warmup_steps: 570   # epoch 5 이전엔 gate 체크 안 함 (190 steps/epoch × 3 rw_steps)
+  sep_std_ema_alpha: 0.1
+
+logging:
+  log_interval: 10
+  save_interval: 1
+  save_best_val: true
+  output_dir: outputs/ebm_fm_gate_v1
