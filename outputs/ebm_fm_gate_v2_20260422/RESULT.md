@@ -8,7 +8,7 @@
 | **베이스** | ebm_fm_gate_v1 (best val ρ=0.2791, ep28, seed=1) |
 | **목적** | ∇rw spike 방어(energy_clamp=20.0) + gate 이후 sep_std_ema 지속 업데이트(sep monitoring fix) |
 | **설정** | seed=1, epochs=30, l2_reg=0.1, energy_clamp=20.0, fm_gate_sep_std_threshold=40.0, sgld_permanent_ratio=0.3 |
-| **현황** | 학습 완료, val 완료, ckpt_best_val.pt 저장 (ep29, ρ=0.2848) |
+| **현황** | 학습 완료, val 완료, ckpt_best_val.pt 저장 (ep29, ρ=0.2848) / **test set 평가 완료** |
 
 ---
 
@@ -115,7 +115,13 @@
 **최종 best val**: ep29, **ρ=+0.2848** (p=0.0001) ✅  
 체크포인트: `ckpt_best_val.pt` = `ckpt_epoch0029.pt`
 
-**이전 실험 대비**:
+### Test set 최종 결과 (N=178, best val ckpt=ep29)
+
+| 실험 | test ρ | p-value | AUROC(E) | ECE | 판정 |
+|------|--------|---------|----------|-----|------|
+| **FM gate v2** | **+0.2384** | **0.0014** | **0.7096** | 0.7885 | **PASS** |
+
+**이전 실험 대비 (val 기준)**:
 
 | 실험 | best val ρ | best epoch | AUROC(E)@best | ECE@best | 첫 PASS |
 |------|-----------|-----------|--------------|---------|--------|
@@ -127,6 +133,18 @@
 
 - v2 best ρ=0.2848 > v1 best ρ=0.2791 ✅ (소폭이지만 개선)
 - v2 best epoch ECE=0.7588 — v1(0.7945) 대비 개선. 전반 ECE는 여전히 ~0.79 고착이나 ep29에서 하락 관찰.
+
+**이전 실험 대비 (test 기준)**:
+
+| 실험 | test ρ | p-value | AUROC(E) | ECE | 비고 |
+|------|--------|---------|----------|-----|------|
+| C (SGLD-only, 3-seed avg) | 0.239 ± 0.010 | — | 0.688 | — | PASS |
+| FM gate v1 (seed=1) | +0.2885 | 0.0001 | 0.7214 | 0.8127 | PASS |
+| **FM gate v2 (seed=1)** | **+0.2384** | **0.0014** | **0.7096** | **0.7885** | **PASS** |
+
+- **test ρ=0.2384** — val best(0.2848) 대비 크게 하락. val-test 격차 0.0464로 v1(0.2885-0.2791=0.0094)보다 훨씬 큼 ⚠️
+- **v1 test ρ(0.2885) > v2 test ρ(0.2384)** — val에서 v2가 앞섰으나 test에서 역전. energy_clamp=20.0 + sgld_permanent_ratio=0.3 조합이 특정 seed에서 val에 과적합됐을 가능성
+- AUROC(E)=0.7096 — C avg(0.688) 대비 개선은 유지. ECE=0.7885로 v1(0.8127)보다 소폭 낮음
 
 ---
 
@@ -159,8 +177,8 @@
 
 ## 6. 다음 스텝
 
-- [ ] **FM gate v2 test set 평가** — `eval_test.py --config configs/ebm_fm_gate_v2.yaml` (best_val=ep29, ρ=0.2848)
-- [ ] **FM gate v1 test set 평가** — `eval_test.py --config configs/ebm_fm_gate_v1.yaml` (best_val=ep28, ρ=0.2791)
+- [x] **FM gate v2 test set 평가** — test ρ=0.2384, AUROC(E)=0.7096, ECE=0.7885 (ep29 ckpt)
+- [x] **FM gate v1 test set 평가** — test ρ=0.2885, AUROC(E)=0.7214, ECE=0.8127 (ep28 ckpt)
 - [ ] **FM gate v2 seed 2, 3 재현** — 3-seed 평균 ρ±std 확보 후 C(0.2393±0.010) 및 v1과 공정 비교
 - [ ] **ECE 개선** — post-hoc temperature scaling. B(ECE=0.232) vs C/FM gate(ECE≈0.793) 격차 해소 or 논문에서 설명
 - [ ] **ep14 이상 원인 분석** — train.log에서 ep14 구간 ∇rw, e_pos_std, e_neg_std 추적
