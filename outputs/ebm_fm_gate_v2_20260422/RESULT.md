@@ -167,11 +167,30 @@
 - **seed=1 단일 run**: v1과 마찬가지로 3-seed 재현 없음. 현재 수치는 seed-specific일 수 있으며 우위 주장을 위해 seed 2, 3 재현 필수.
 - **ECE 고착 (≈0.79)**: energy_clamp가 ranking에는 도움이 됐으나 calibration 문제는 미해결. B(ECE=0.232) 대비 ~0.56 격차는 구조적 문제(CD loss 특성).
 
-### 근본 원인 가설
+### 근본 원인 분석 (로그 추적 완료)
 
-- **ep14 ECE 이상**: FM 샘플이 energy_clamp 범위를 일시적으로 넘어서며 CD loss 분자/분모가 비정상적으로 계산됨 → calibration 왜곡. 또는 SGLD replay buffer에 오래된 (이제는 easy한) negative가 섞이면서 EBM이 과도한 separation 시도 후 조정.
-- **초기 spike vs 후반 안정**: FM 샘플의 에너지가 초기엔 EBM 범위 밖(-1~+6.8 혼재)이다가 ep06 이후 +4~+6으로 수렴. 이 수렴 이후 energy_clamp가 실질적으로 작동하기 시작 → ∇rw 안정화.
-- **ECE vs ranking 분리**: CD loss는 binary ranking (real vs neg)을 최적화하며 probability calibration을 목표로 하지 않음. Temperature scaling이 필요한 구조적 이유.
+**ep14 붕괴 타임라인 (train.log 직접 확인)**:
+
+| step | 현상 | 수치 |
+|------|------|------|
+| s2640 | ∇pol spike (정책 네트워크 급격한 업데이트) | ∇pol=**5.07** (정상 ~0.5) |
+| s2650 | FM 샘플 energy 역전 (demo 영역 침범) | fm_e=**-6.2** (정상 +4~+5), e_neg_std=**4.746** 폭발, ∇rw=**396.28** |
+| s2660 | EBM 붕괴 상태 | e+≈e-≈0, ∇rw=138.21 |
+
+**진짜 원인**: energy_clamp=20.0이 **개입하지 못한 이유**는 fm_e=-6.2가 ±20 범위 안에 있기 때문. clamp는 energy scale 폭발(>20)을 막는 것이지, FM 샘플이 demo 에너지 영역(-5 근처)에 침범하는 것을 막지 못함. 즉 v2에서 고치려던 문제(∇rw spike)와 실제 붕괴 원인(FM sample quality)이 다른 문제.
+
+**v1과의 차이**: v1은 energy_clamp 없음 → EBM energy scale이 자유롭게 발전 → FM 샘플이 demo 영역에 침범하기 어려운 더 넓은 에너지 격차 형성. v1에서 ep14 val ρ=0.1481(PASS)로 같은 시점에 붕괴 없음.
+
+**v2 test 하락과의 연결**: ep14 마지막 2 step이 EBM 가중치를 일시적으로 크게 손상. ep16부터 val은 회복되나, 이 disruption이 model generalization에 영향 → val-test 격차 0.046(v2) vs 거의 없는 v1(0.0094 오히려 개선)으로 나타남.
+
+**v3 설계 방향**: energy_clamp보다 **FM sample quality filter**가 필요. fm_e < 0 (혹은 fm_e < e+ 평균)인 샘플은 해당 step에서 drop하거나 SGLD-only로 fallback.
+
+**ECE temperature scaling — degenerate solution 확인**:
+
+- val/test mal_var > 0 비율: val=80.2%, test=82.0%
+- 최적 T=403 → sigmoid(energy/403) ≈ 0.5 (모든 샘플에 동일 예측) → ECE ≈ |0.5 - 0.8| = 0.3
+- T=403은 **"모두 0.5 예측"** degenerate solution. meaningful calibration 아님
+- **결론**: CD loss EBM의 calibration 문제는 temperature scaling으로 해소 불가. ECE는 논문에서 "CD loss는 ranking 최적화이며 absolute probability calibration을 목표로 하지 않는다"로 방어하는 것이 적절. Spearman ρ가 primary metric임을 강조.
 
 ---
 
@@ -179,9 +198,10 @@
 
 - [x] **FM gate v2 test set 평가** — test ρ=0.2384, AUROC(E)=0.7096, ECE=0.7885 (ep29 ckpt)
 - [x] **FM gate v1 test set 평가** — test ρ=0.2885, AUROC(E)=0.7214, ECE=0.8127 (ep28 ckpt)
-- [ ] **FM gate v2 seed 2, 3 재현** — 3-seed 평균 ρ±std 확보 후 C(0.2393±0.010) 및 v1과 공정 비교
-- [ ] **ECE 개선** — post-hoc temperature scaling. B(ECE=0.232) vs C/FM gate(ECE≈0.793) 격차 해소 or 논문에서 설명
-- [ ] **ep14 이상 원인 분석** — train.log에서 ep14 구간 ∇rw, e_pos_std, e_neg_std 추적
+- [ ] **FM gate v3 설계** — FM sample quality filter 추가 (fm_e < 0이면 해당 step SGLD-only fallback). energy_clamp 제거 or 대폭 완화. ep14 붕괴 재현 방지
+- [x] **FM gate v2 seed 2, 3 재현** — 불필요. v2 test ρ=0.2384 ≈ C baseline(0.239). ep14 붕괴 원인(FM sample quality filter 부재) 확인 → v3 설계로 대체
+- [x] **ECE 개선** — temperature scaling 시도했으나 T=403(degenerate, T→∞). CD loss EBM 구조적 한계. 논문 방어 방향: "CD loss는 ranking 최적화, Spearman ρ가 primary metric"
+- [x] **ep14 이상 원인 분석** — FM 샘플 energy 역전(fm_e=-6.2)이 원인. energy_clamp=20.0은 이 문제 차단 불가. v3에서 FM sample quality filter로 해소
 
 ---
 
