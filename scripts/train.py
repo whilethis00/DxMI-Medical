@@ -490,6 +490,8 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
         fm_gate_warmup_steps  = cfg["training"].get("fm_gate_warmup_steps", 0),
         reward_cd_weight      = cfg["training"].get("reward_cd_weight", 0.0),
         reward_cd_temp        = cfg["training"].get("reward_cd_temp", 1.0),
+        fm_quality_filter     = cfg["training"].get("fm_quality_filter", False),
+        fm_quality_threshold  = cfg["training"].get("fm_quality_threshold", 0.0),
     )
     # DDP 래퍼를 그대로 전달 → MaxEntIRL 내부에서 gradient sync 보장
     irl = MaxEntIRL(ebm, vf, irl_cfg, device)
@@ -535,7 +537,8 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
                   f"sep={m.get('sep_std_ema',0):.1f}")
         # FM 그룹
         fm_on = "ON" if m.get("fm_enabled", 0) > 0.5 else "off"
-        fm    = f"fm_e={m.get('fm_sample_energy',0):+.1f}  fm={fm_on}"
+        fb    = f"  fb={m.get('fm_fallback_rate',0):.0%}" if m.get("fm_enabled", 0) > 0.5 else ""
+        fm    = f"fm_e={m.get('fm_sample_energy',0):+.1f}  fm={fm_on}{fb}"
         # grad 그룹
         grad  = (f"∇rw={m.get('reward_grad_norm',0):.2f}  "
                  f"∇pol={m.get('policy_grad_norm',0):.2f}")

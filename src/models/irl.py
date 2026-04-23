@@ -56,6 +56,11 @@ class IRLConfig:
     fm_gate_probe_size: int = 16           # gate 체크용 FM probe 배치 크기 (클수록 sep_std 안정)
     fm_gate_warmup_steps: int = 0          # 이 reward step 수 이전엔 gate 체크 자체 안 함
 
+    # FM sample quality filter (v3)
+    # FM 샘플의 평균 에너지가 threshold 미만이면 demo 에너지 영역 침범으로 판단 → SGLD fallback
+    fm_quality_filter: bool = False
+    fm_quality_threshold: float = 0.0
+
 
 class ReplayBuffer:
     """
@@ -230,7 +235,24 @@ class MaxEntIRL:
         )
         self.replay.push(x_sgld)
 
-        x_fm  = self._policy_sample(n_fm, detach=True, n_steps=self.cfg.policy_sample_steps)
+        x_fm = self._policy_sample(n_fm, detach=True, n_steps=self.cfg.policy_sample_steps)
+
+        # FM quality filter: fm_e < threshold → demo 에너지 영역 침범 → SGLD fallback
+        if self.cfg.fm_quality_filter:
+            with torch.no_grad():
+                e_fm_check = self._raw_ebm(x_fm)
+            if e_fm_check.mean().item() < self.cfg.fm_quality_threshold:
+                x_init_extra = self.replay.sample(n_fm, self.cfg.replay_prob, self.device)
+                x_fm_replaced = self._raw_ebm.sample_langevin(
+                    x_init_extra,
+                    n_steps     = self.cfg.sgld_steps,
+                    step_size   = self.cfg.sgld_step_size,
+                    noise_scale = self.cfg.sgld_noise_scale,
+                )
+                self.replay.push(x_fm_replaced)
+                x_neg = torch.cat([x_sgld, x_fm_replaced], dim=0)
+                return x_neg, "sgld_fallback"
+
         x_neg = torch.cat([x_sgld, x_fm], dim=0)
         return x_neg, "hybrid"
 
@@ -305,6 +327,7 @@ class MaxEntIRL:
             "fm_enabled": 0.0,
             "rw_min": 0.0,
             "rw_entropy": 0.0,
+            "fm_fallback_rate": 0.0,  # fraction of steps where FM fell back to SGLD
         }
 
         for _ in range(self.cfg.reward_steps_per_iter):
@@ -392,6 +415,7 @@ class MaxEntIRL:
                 "fm_enabled":       float(self._fm_enabled),
                 "rw_min":        rw_min_val,
                 "rw_entropy":    rw_entropy_val,
+                "fm_fallback_rate": float(neg_source == "sgld_fallback"),
             }
             for k in total_metrics:
                 total_metrics[k] += step_metrics[k] / self.cfg.reward_steps_per_iter

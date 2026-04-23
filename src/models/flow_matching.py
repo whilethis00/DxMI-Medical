@@ -181,9 +181,9 @@ def rollout(
         t_val = t_start + i * dt
         t = torch.full((B,), t_val, device=x.device, dtype=x.dtype)
         v = velocity_field(x, t)
-        x = (x + v * dt).clamp(0.0, 1.0)
+        x = x + v * dt  # no intermediate clamp — preserves gradient flow
 
-    return x
+    return x.clamp(0.0, 1.0)
 
 class FlowMatchingWrapper(nn.Module):
     """
