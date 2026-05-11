@@ -1,133 +1,133 @@
-# Learning Clinical Ambiguity from Expert Disagreement
+# 전문가 불일치로부터 임상적 모호성 학습하기
 
-This repository studies **clinical ambiguity learning** in medical imaging.
+이 저장소는 의료영상에서 **임상적 모호성 학습(clinical ambiguity learning)**을 연구합니다.
 
-The project was previously organized as `DxMI Medical`, but the research direction is now sharper: the goal is not to build another generic uncertainty estimator. The goal is to learn the latent clinical ambiguity that is revealed by expert disagreement, judgments, and preferences.
+이 프로젝트는 이전에 `DxMI Medical`이라는 이름으로 정리되어 있었지만, 현재 연구 방향은 더 명확해졌습니다. 목표는 또 하나의 일반적인 불확실성 추정기를 만드는 것이 아닙니다. 전문가의 불일치, 판단, 선호에서 드러나는 잠재적인 임상적 모호성을 학습하는 것이 목표입니다.
 
-Target venue: ICLR 2027.
+목표 학회: ICLR 2027.
 
-## Core Thesis
+## 핵심 주장
 
-Most uncertainty methods ask a model-centric question:
+대부분의 불확실성 방법은 모델 중심의 질문을 던집니다.
 
-> How uncertain is the model?
+> 모델은 얼마나 불확실한가?
 
-Clinical decision-making often needs a different question:
+하지만 임상 의사결정에는 종종 다른 질문이 필요합니다.
 
-> Is this case intrinsically ambiguous to expert clinicians?
+> 이 사례는 전문 임상의에게 본질적으로 모호한가?
 
-Model uncertainty and clinical ambiguity are not the same object. A model can be confident on cases where radiologists disagree, and a model can be uncertain on cases where experts would quickly agree. This project treats expert disagreement not as disposable label noise, but as an observable proxy for a latent property: **clinical ambiguity**.
+모델 불확실성과 임상적 모호성은 같은 대상이 아닙니다. 모델은 영상의학과 전문의들이 서로 다른 판단을 내리는 사례에서도 높은 확신을 보일 수 있고, 반대로 전문가들이 빠르게 합의할 사례에서도 불확실해할 수 있습니다. 이 프로젝트는 전문가 불일치를 버려야 할 라벨 노이즈로 보지 않고, **임상적 모호성**이라는 잠재 속성을 관측할 수 있게 해주는 신호로 다룹니다.
 
-## Problem We Want to Solve
+## 해결하려는 문제
 
-We want to learn **clinical ambiguity** in medical imaging.
+우리는 의료영상에서 **임상적 모호성**을 학습하고자 합니다.
 
-The target is not simply lesion classification, out-of-distribution detection, or generic uncertainty estimation. The target is to estimate whether a medical case is likely to be interpreted inconsistently by expert clinicians because the visual evidence itself is borderline, mixed, or clinically ambiguous.
+목표는 단순한 병변 분류, 분포 밖 탐지, 일반적인 불확실성 추정이 아닙니다. 목표는 어떤 의료 사례가 시각적 근거 자체의 경계성, 혼재성, 임상적 모호성 때문에 전문 임상의들 사이에서 일관되지 않게 해석될 가능성이 높은지를 추정하는 것입니다.
 
-In LIDC-IDRI, four radiologists independently rate pulmonary nodule malignancy. Their disagreement is not treated as a nuisance to average away. It is treated as a measurable signal that reveals where clinical interpretation becomes unstable.
+LIDC-IDRI에서는 네 명의 영상의학과 전문의가 폐 결절의 악성도를 독립적으로 평가합니다. 이들의 불일치는 평균내어 제거해야 할 방해 요소로 취급하지 않습니다. 임상 해석이 불안정해지는 지점을 드러내는 측정 가능한 신호로 사용합니다.
 
-The problem statement is:
+문제 정의는 다음과 같습니다.
 
-> Given medical images and partial expert judgment signals, learn a score that reflects latent clinical ambiguity: the likelihood that competent experts would disagree on the case.
+> 의료영상과 부분적인 전문가 판단 신호가 주어졌을 때, 유능한 전문가들이 해당 사례에 대해 서로 다른 판단을 내릴 가능성, 즉 잠재적인 임상적 모호성을 반영하는 점수를 학습한다.
 
-## Research Question
+## 연구 질문
 
-Primary research question:
+주요 연구 질문은 다음과 같습니다.
 
-> Can clinical ambiguity be learned as a latent reward, rather than as a supervised label?
+> 임상적 모호성을 지도 라벨이 아니라 잠재 보상으로 학습할 수 있는가?
 
-Operational version:
+운영적 질문은 다음과 같습니다.
 
-> Can we learn clinically meaningful ambiguity from expert disagreement patterns, judgments, or preferences, rather than from model uncertainty or direct variance regression alone?
+> 모델 불확실성이나 직접적인 분산 회귀에만 의존하지 않고, 전문가 불일치 패턴, 판단, 선호로부터 임상적으로 의미 있는 모호성을 학습할 수 있는가?
 
-This framing is important because LIDC-IDRI does not contain real diagnostic trajectories. It contains multiple expert malignancy ratings. Therefore the claim is not that we observe full expert behavior. The claim is that multi-expert judgments reveal a latent clinical ambiguity structure.
+이 프레이밍이 중요한 이유는 LIDC-IDRI가 실제 진단 궤적을 포함하지 않기 때문입니다. 이 데이터셋은 여러 전문가의 악성도 평정을 제공합니다. 따라서 이 연구의 주장은 완전한 전문가 행동을 관찰했다는 것이 아닙니다. 다중 전문가 판단이 잠재적인 임상적 모호성 구조를 드러낸다는 것입니다.
 
-## Why Existing Work Is Insufficient
+## 기존 연구가 충분하지 않은 이유
 
-Existing uncertainty methods usually answer different questions:
+기존 불확실성 방법들은 대체로 다른 질문에 답합니다.
 
-- MC Dropout / Ensembles: how unstable are model parameters or predictions?
-- Bayesian / epistemic uncertainty: where is the model undersupported by data?
-- Aleatoric uncertainty: where is the label noisy?
-- Diffusion uncertainty: how far is a sample from the learned data manifold?
-- Supervised disagreement prediction: can annotator variance be regressed directly?
+- MC Dropout / Ensembles: 모델 파라미터나 예측이 얼마나 불안정한가?
+- Bayesian / epistemic uncertainty: 데이터가 모델을 충분히 뒷받침하지 못하는 영역은 어디인가?
+- Aleatoric uncertainty: 라벨이 얼마나 noisy한가?
+- Diffusion uncertainty: 샘플이 학습된 데이터 manifold에서 얼마나 떨어져 있는가?
+- Supervised disagreement prediction: 주석자 분산을 직접 회귀할 수 있는가?
 
-The proposed problem is different:
+이 프로젝트가 다루는 문제는 다릅니다.
 
-> Which cases are clinically ambiguous enough that experts are likely to disagree?
+> 어떤 사례가 전문가들 사이의 불일치를 유발할 만큼 임상적으로 모호한가?
 
-The strongest reviewer objection is expected to be:
+가장 강한 리뷰어 반론은 다음과 같을 가능성이 큽니다.
 
-> If annotator variance is available, why not just regress it?
+> annotator variance가 있는데, 왜 그냥 회귀하지 않는가?
 
-The answer cannot be "IRL is more complex." The answer must be empirical and conceptual:
+이에 대한 답은 "IRL이 더 복잡하다"가 될 수 없습니다. 답은 경험적이고 개념적이어야 합니다.
 
-- Disagreement is only a proxy for latent ambiguity, not the ambiguity itself.
-- In realistic settings, full multi-expert disagreement labels are sparse, noisy, missing, or only available as preferences.
-- A reward-inference formulation should be most useful when supervision is weak, partial, noisy, or preference-based.
+- 불일치는 잠재적인 모호성 자체가 아니라 그 proxy입니다.
+- 실제 환경에서는 완전한 다중 전문가 불일치 라벨이 희소하거나, noisy하거나, 누락되어 있거나, 선호 형태로만 제공될 수 있습니다.
+- 보상 추론 formulation은 supervision이 약하거나, 부분적이거나, noisy하거나, preference-based일 때 가장 유용해야 합니다.
 
-The gap is therefore not just "existing methods perform worse." The gap is conceptual:
+따라서 gap은 단순히 "기존 방법의 성능이 낮다"가 아닙니다. gap은 개념적입니다.
 
-> Existing methods usually model model uncertainty, label noise, or direct disagreement targets. They do not explicitly model clinical ambiguity as a latent structure revealed through expert judgments.
+> 기존 방법들은 대개 모델 불확실성, 라벨 노이즈, 직접적인 불일치 타깃을 모델링합니다. 전문가 판단을 통해 드러나는 잠재 구조로서의 임상적 모호성을 명시적으로 모델링하지 않습니다.
 
-## Methodological View
+## 방법론적 관점
 
-The method is not primarily "EBM + Flow Matching + IRL." Those are implementation components.
+이 방법의 핵심은 단순히 "EBM + Flow Matching + IRL"이 아닙니다. 이들은 구현 구성 요소입니다.
 
-The paper-level method is:
+논문 수준의 방법은 다음과 같습니다.
 
-> Infer a latent clinical ambiguity reward from expert disagreement patterns, then use an energy-based generative policy to identify clinically ambiguous regions.
+> 전문가 불일치 패턴으로부터 잠재적인 임상적 모호성 보상을 추론하고, energy-based generative policy를 사용해 임상적으로 모호한 영역을 식별한다.
 
-This directly answers the research question:
+이는 연구 질문에 직접 답합니다.
 
-- If ambiguity is latent rather than directly observed, use reward inference rather than only regression.
-- If disagreement is an imperfect proxy, learn an energy landscape that ranks cases by ambiguity instead of forcing calibrated probabilities from noisy labels.
-- If supervision is sparse, noisy, or preference-based, use an IRL/preference-learning view that can consume weaker expert signals.
-- If the ambiguity boundary matters, use Flow Matching as a differentiable policy to explore cases near that boundary.
+- 모호성이 직접 관측되는 값이 아니라 잠재적인 값이라면, 회귀만 사용하는 대신 보상 추론을 사용합니다.
+- 불일치가 불완전한 proxy라면, noisy label에서 calibrated probability를 강제로 맞추기보다 사례를 모호성 기준으로 rank하는 energy landscape를 학습합니다.
+- supervision이 희소하거나, noisy하거나, preference-based라면, 더 약한 전문가 신호를 사용할 수 있는 IRL/preference-learning 관점을 사용합니다.
+- 모호성 경계가 중요하다면, Flow Matching을 그 경계 부근의 사례를 탐색하는 differentiable policy로 사용합니다.
 
-Components:
+구성 요소:
 
-1. **Expert Judgment Modeling**
-   LIDC-IDRI provides four independent malignancy ratings. Their disagreement is used as an observable proxy for latent clinical ambiguity, not as a perfect ground-truth label.
+1. **전문가 판단 모델링**
+   LIDC-IDRI는 네 명의 독립적인 악성도 평정을 제공합니다. 이들의 불일치는 완벽한 ground-truth label이 아니라 잠재적인 임상적 모호성을 드러내는 관측 가능한 proxy로 사용됩니다.
 
-2. **Latent Clinical Reward Inference**
-   Cases with expert consensus should receive higher certainty reward. Cases with expert disagreement should induce lower reward or higher energy. MaxEnt IRL is used to infer this latent reward structure.
+2. **잠재 임상 보상 추론**
+   전문가 합의가 높은 사례는 더 높은 certainty reward를 받아야 합니다. 전문가 불일치가 큰 사례는 더 낮은 reward 또는 더 높은 energy를 유도해야 합니다. MaxEnt IRL을 사용해 이 잠재 보상 구조를 추론합니다.
 
-3. **Energy-Based Clinical Ambiguity Score**
-   EBM energy is interpreted as a clinical ambiguity score. Higher energy should align with higher expert disagreement.
+3. **Energy-Based 임상적 모호성 점수**
+   EBM energy는 임상적 모호성 점수로 해석됩니다. 높은 energy는 높은 전문가 불일치와 정렬되어야 합니다.
 
-4. **Flow Matching as an Ambiguity-Boundary Policy**
-   Flow Matching is not presented as merely a faster DDPM replacement. It is a differentiable policy for exploring the boundary between clinically certain and ambiguous cases.
+4. **모호성 경계 정책으로서의 Flow Matching**
+   Flow Matching은 단순히 DDPM을 빠르게 대체하는 방법으로 제시하지 않습니다. 임상적으로 확실한 사례와 모호한 사례 사이의 경계를 탐색하는 differentiable policy로 사용합니다.
 
-## Experiments Required for a Strong Paper
+## 강한 논문을 위해 필요한 실험
 
-Correlation with annotator variance is not enough. The paper needs experiments that prove the problem definition and justify IRL.
+annotator variance와의 상관만으로는 충분하지 않습니다. 논문은 문제 정의를 입증하고 IRL 사용을 정당화하는 실험을 필요로 합니다.
 
-Required experimental blocks:
+필수 실험 블록:
 
-1. **Model uncertainty vs. clinical ambiguity**
-   Show that standard uncertainty baselines do not reliably recover high-disagreement cases.
+1. **모델 불확실성 vs. 임상적 모호성**
+   표준 불확실성 baseline이 high-disagreement 사례를 안정적으로 복원하지 못한다는 점을 보여야 합니다.
 
-2. **Strong supervised variance regression**
-   Compare against a strong direct-supervision baseline. A weak supervised baseline will not be credible.
+2. **강한 supervised variance regression**
+   강한 직접 지도 baseline과 비교해야 합니다. 약한 supervised baseline은 설득력이 없습니다.
 
-3. **Limited expert labels**
-   Train with 100%, 50%, 25%, and 10% of disagreement labels. IRL should degrade more gracefully than direct regression.
+3. **제한된 전문가 라벨**
+   불일치 라벨의 100%, 50%, 25%, 10%만 사용해 학습합니다. IRL은 direct regression보다 더 완만하게 성능이 저하되어야 합니다.
 
 4. **Preference-only supervision**
-   Use pairwise statements such as "case A is more ambiguous than case B." This is where reward inference has the clearest motivation.
+   "사례 A가 사례 B보다 더 모호하다"와 같은 pairwise statement를 사용합니다. 보상 추론의 동기가 가장 명확해지는 설정입니다.
 
-5. **Missing/noisy experts**
-   Remove annotators or inject rating noise. The method should remain robust when full 4-reader variance is unreliable.
+5. **누락되거나 noisy한 전문가**
+   annotator를 제거하거나 rating noise를 주입합니다. 완전한 4-reader variance가 신뢰하기 어려울 때도 방법이 견고해야 합니다.
 
-6. **Qualitative clinical evidence**
-   High-energy cases should correspond to clinically plausible ambiguity: unclear margins, mixed texture, borderline malignancy cues, or morphology that would plausibly split expert judgments.
+6. **정성적 임상 근거**
+   high-energy 사례는 불분명한 margin, 혼재된 texture, 경계성 악성도 cue, 전문가 판단을 나눌 수 있는 morphology 등 임상적으로 그럴듯한 모호성과 대응되어야 합니다.
 
-## Current Experimental Status
+## 현재 실험 상태
 
-The latest technical line is `ebm_fm_gate_v3`, which adds an FM sample quality filter to prevent FM negatives from entering the demo energy region.
+최신 기술 라인은 `ebm_fm_gate_v3`입니다. 이 버전은 FM negative가 demo energy 영역으로 들어가는 것을 막기 위해 FM sample quality filter를 추가합니다.
 
-Known results so far:
+현재까지 알려진 결과:
 
 | Experiment | Split | Spearman rho | AUROC(E) | ECE | Status |
 |---|---:|---:|---:|---:|---|
@@ -140,20 +140,20 @@ Known results so far:
 | FM gate v3 seed2 | val | 0.3229 | 0.7398 | 0.7866 | test pending |
 | FM gate v3 seed3 | val | 0.3044 | 0.7491 | 0.7933 | test pending |
 
-Interpretation:
+해석:
 
-- v3 validates the quality-filter idea on validation runs, but seed1 test does not beat v1.
-- seed2 and seed3 need test evaluation before making any claim about v3.
-- ECE remains poor for IRL/CD-based variants; ranking metrics are currently the primary evidence.
-- The next research-critical experiments are not more small v3 tweaks. They are sparse/noisy/preference expert-supervision settings.
+- v3는 validation run에서 quality-filter 아이디어를 검증하지만, seed1 test는 v1을 넘지 못합니다.
+- seed2와 seed3는 v3에 대해 어떤 claim을 하기 전에 test evaluation이 필요합니다.
+- IRL/CD 기반 variant에서는 ECE가 여전히 좋지 않습니다. 현재 주된 근거는 ranking metric입니다.
+- 다음으로 연구상 중요한 실험은 작은 v3 tweak이 아닙니다. sparse/noisy/preference expert-supervision 설정입니다.
 
-Key result files:
+주요 결과 파일:
 
 - [FM gate v3 seed1 result](outputs/ebm_fm_gate_v3_20260423/RESULT.md)
 - [April week 3 progress](docs/progress/Apr_W3.md)
 - [Project diagnosis](docs/planning/Project_Diagnosis.md)
 
-## Repository Layout
+## 저장소 구조
 
 ```text
 configs/       YAML experiment configs
@@ -166,28 +166,28 @@ scripts/       training, evaluation, data, and diagnostic entrypoints
 src/           reusable package code
 ```
 
-Important docs:
+중요 문서:
 
 - [Docs index](docs/README.md)
 - [Project diagnosis](docs/planning/Project_Diagnosis.md)
 - [April week 3 progress](docs/progress/Apr_W3.md)
 - [Code fix priority](docs/planning/Code_Fix_Priority.md)
 
-## Environment
+## 환경
 
 - Conda env: `dxmi_medical`
 - Python: `/home/introai26/miniconda3/envs/dxmi_medical/bin/python`
 
-## Common Commands
+## 자주 쓰는 명령어
 
-Train an experiment:
+실험 학습:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 scripts/train.py \
     --config configs/<experiment>.yaml
 ```
 
-Evaluate best validation checkpoints on the test split:
+best validation checkpoint를 test split에서 평가:
 
 ```bash
 python scripts/eval_test.py \
@@ -195,13 +195,13 @@ python scripts/eval_test.py \
     --ckpt outputs/ebm_fm_gate_v3_20260423/ckpt_best_val.pt
 ```
 
-Run the current v3 3-seed test evaluation:
+현재 v3 3-seed test evaluation 실행:
 
 ```bash
 bash scripts/eval_v3_3seed.sh
 ```
 
-## Reference
+## 참고문헌
 
 Base paper:
 
