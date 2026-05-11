@@ -1,7 +1,7 @@
 # DxMI Medical
 
 Maximum Entropy IRL + EBM 기반 임상 의료 불확실성 추정 모델.
-타겟: ICLR 2027 (제출 마감: 2026년 9월 말)
+타겟: ICLR 2027.
 
 ## 환경
 
@@ -10,23 +10,26 @@ Maximum Entropy IRL + EBM 기반 임상 의료 불확실성 추정 모델.
 
 ## 프로젝트 구조
 
-```
-data/
-  raw/        # LIDC-IDRI 원본
-  processed/  # 전처리된 패치/볼륨
-  splits/     # train/val/test split 파일
-src/
-  data/       # 데이터 로딩, 전처리, reward 계산
-  models/     # EBM, Flow Matching, IRL
-  evaluation/ # 메트릭 (ECE, AUROC, Spearman ρ)
-configs/      # yaml 실험 설정
-scripts/      # 실행 스크립트
-outputs/      # 실험별 폴더 — <exp_name>_<YYYYMMDD>/
+```text
+configs/       yaml 실험 설정
+data/          LIDC-IDRI raw/processed/splits
+docs/          진행 기록, 계획, 운영 문서, 결과 메모
+notebooks/     EDA
+outputs/       실험별 산출물 — <exp_name>_<YYYYMMDD>/
+papers/        참고 논문 PDF
+scripts/       학습/평가/전처리/진단 실행 스크립트
+src/           데이터, 모델, 평가 라이브러리 코드
 ```
 
----
+문서 위치:
 
-## 실험 루틴 (MUST FOLLOW)
+- `docs/progress/`: 주차별 진행 기록
+- `docs/planning/`: 진단, 코드 수정 계획, 연구 방향
+- `docs/operations/`: GPU/PBS 등 실행 운영 메모
+- `docs/results/`: 단발 결과 요약
+- `docs/README.md`: 문서 인덱스
+
+## 실험 루틴
 
 ### 1. 실험 실행
 
@@ -39,78 +42,62 @@ CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 scripts/train.py \
 
 ### 2. 실험 폴더 구조
 
-```
+```text
 outputs/<exp_name>_<YYYYMMDD>/
-  train.log       # step/val/epoch 로그 자동 저장
-  RESULT.md       # 실험 완료 시 자동 생성 (git push 포함)
-  ckpt_epoch*.pt  # 체크포인트 (git 제외 — .gitignore)
+  train.log
+  RESULT.md
+  training_curves.png
+  ckpt_epoch*.pt
+  ckpt_best_val.pt
 ```
 
-### 3. 실험 완료 시 자동 처리 (train.py)
+체크포인트 `.pt`는 git에 올리지 않는다.
 
-- `RESULT.md` 자동 생성: 개요, 실험 세팅, val 지표 파싱
-- `train.log` + `RESULT.md` → git add/commit/push 자동 실행
-- 체크포인트(.pt)는 git에 올리지 않음
+### 3. Test 평가
 
-### 4. RESULT.md 양식
+```bash
+python scripts/eval_test.py \
+    --config configs/<실험config>.yaml \
+    --ckpt outputs/<실험명>_<YYYYMMDD>/ckpt_best_val.pt
+```
 
-실험 완료 시 아래 양식으로 작성. 섹션 순서 고정.
+현재 v3 3-seed 평가는:
+
+```bash
+bash scripts/eval_v3_3seed.sh
+```
+
+## RESULT.md 양식
+
+실험 완료 시 아래 섹션 순서를 유지한다.
 
 ```markdown
 # <실험명> — Result
 
 ## 1. 실험 메타
-| 항목 | 내용 |
-|------|------|
-| **날짜** | YYYY-MM-DD |
-| **베이스** | 이전 실험명 + 핵심 상태 |
-| **목적** | 한 줄 |
-| **설정** | 핵심 하이퍼파라미터 |
-| **현황** | 학습 완료 / val 완료 등 |
-
 ## 2. 무엇을 검증하나
-이전 실험의 문제 + 이번 변경 + 합격 기준 수치
-
 ## 3. 학습 손실 곡선
-주요 epoch/step의 loss 테이블 + 관찰
-
 ## 4. 검증 지표
-epoch별 val 지표 테이블 + 이전 실험 대비 비교 테이블 (목표 달성? ✅/❌)
-
 ## 5. 결과 해석 및 인사이트
-### 긍정적
-### 주의
-### 근본 원인 가설 (있으면)
-
 ## 6. 다음 스텝
-- [ ] 체크리스트
-
 ## 7. 저장 파일 목록
-outputs/<실험명>/ 트리
 ```
-
-### 5. .gitignore 확인
-
-`outputs/**/*.pt`는 반드시 .gitignore에 포함되어야 함.
-
----
 
 ## 핵심 아이디어
 
-- **Reward**: `r(x) = -Var(malignancy_scores)` — LIDC-IDRI 4명 판독 분산
-- **EBM energy**: energy 높음 = 의사 간 disagreement 큼 = 임상적으로 불확실
-- **Backbone**: OT-CFM (원본 DxMI의 DDPM 교체)
+- Reward: `r(x) = -Var(malignancy_scores)`
+- EBM energy: energy 높음 = 의사 간 disagreement 큼 = 임상적으로 불확실
+- Backbone: OT-CFM
+- 현재 연구 프레이밍: model uncertainty가 아니라 clinical ambiguity estimation
 
-## 합격 조건 두 가지
+## 합격 조건
 
 1. Ablation: C(IRL) > B(supervised) > A(no IRL)
-2. Clinical correlation: Spearman ρ(energy, annotator disagreement), p < 0.05
+2. Clinical correlation: Spearman rho(energy, annotator disagreement), p < 0.05
+3. Limited/noisy/preference expert signal에서 IRL의 필요성 입증
 
-## 데이터
+## 주의
 
-- LIDC-IDRI: CT, 1,018명, 2,635개 폐결절, 영상의학과 의사 4명 독립 판독 (악성도 1~5)
-- 다운로드 스크립트: `scripts/download_lidc.py`
-
-## 베이스 논문
-
-- DxMI (NeurIPS 2024): https://github.com/swyoon/Diffusion-by-MaxEntIRL
+- `outputs/**/*.pt`는 `.gitignore`에 유지한다.
+- 기존 사용자 변경을 되돌리지 않는다.
+- 실험 재현 명령은 가능한 한 기존 `scripts/*.py` 진입점을 유지한다.

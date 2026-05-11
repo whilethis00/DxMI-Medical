@@ -1,0 +1,77 @@
+# FM Gate v3 실험
+# 목적: ep14 붕괴 근본 원인(FM 샘플의 demo 에너지 영역 침범) 직접 차단
+#
+# v2 분석 결론:
+#   - ep14 s2650: fm_e=-6.2로 demo 에너지 영역(-5 근처) 침범 → EBM CD loss 혼란 → 붕괴
+#   - energy_clamp=20.0은 ±20 초과만 차단, fm_e=-6.2는 범위 안 → 개입 불가
+#   - v2 fix 방향이 틀렸고 test generalization 악화 (v1 test ρ=0.2885 → v2 test ρ=0.2384)
+#
+# v3 변경사항 (v1 베이스):
+#   (1) fm_quality_filter=true + fm_quality_threshold=0.0
+#       FM 샘플의 평균 에너지 < 0이면 해당 step에서 SGLD-only fallback
+#       (정상: fm_e≈+5, 붕괴 직전: fm_e=-6.2)
+#   (2) energy_clamp=null (v2의 잘못된 fix 제거 — v1으로 복원)
+#
+# 나머지 하이퍼파라미터: v1과 동일 (seed=1)
+#
+# 실행:
+#   CUDA_VISIBLE_DEVICES=0,1 torchrun --nproc_per_node=2 scripts/train.py \
+#       --config configs/ebm_fm_gate_v3.yaml --seed 1
+
+experiment:
+  name: ebm_fm_gate_v3_s3
+  description: "FM gate v3 — v1 + FM quality filter (fm_e<0 → SGLD fallback), energy_clamp 제거"
+  type: irl
+
+data:
+  splits_dir: data/splits
+  patch_size: 48
+  batch_size: 4
+  num_workers: 4
+
+model:
+  type: irl
+  base_ch: 32
+
+ebm:
+  sgld_steps: 60
+  sgld_step_size: 0.01
+  sgld_noise_scale: 0.01
+  replay_buffer_size: 10000
+  replay_prob: 0.95
+
+training:
+  epochs: 30
+  reward_lr: 1.0e-4
+  fm_lr: 1.0e-4
+  weight_decay: 1.0e-5
+  l2_reg: 0.1
+  energy_clamp: null           # v2: 20.0 → v3: null (v1으로 복원, 잘못된 fix 제거)
+  grad_clip: 1.0
+  reward_steps_per_iter: 3
+  fm_steps_per_iter: 10
+  policy_sample_steps: 32
+  policy_grad_steps: 2
+  reward_weight: 0.05
+  early_stop_patience: 0
+
+  reward_cd_weight: 1.0
+  reward_cd_temp: 1.0
+
+  sgld_permanent_ratio: 0.3
+  fm_gate_sep_std_threshold: 40.0
+  fm_gate_consecutive: 2
+  fm_gate_check_interval: 50
+  fm_gate_probe_size: 16
+  fm_gate_warmup_steps: 570
+  sep_std_ema_alpha: 0.1
+
+  # FM sample quality filter (v3 신규)
+  fm_quality_filter: true
+  fm_quality_threshold: 0.0   # fm_e 평균 < 0이면 demo 에너지 영역 침범으로 판단 → SGLD fallback
+
+logging:
+  log_interval: 10
+  save_interval: 1
+  save_best_val: true
+  output_dir: outputs/ebm_fm_gate_v3_s3

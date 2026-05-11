@@ -152,6 +152,21 @@ class EarlyStopper:
         return self.counter >= self.patience
 
 
+class ExperimentLogger:
+    """Rank-0 console and file logger."""
+
+    def __init__(self, log_file: Path):
+        self.log_file = log_file
+
+    def log(self, msg: str):
+        if not is_main():
+            return
+        line = f"[{datetime.now().strftime('%H:%M:%S')}] {msg}"
+        print(line, flush=True)
+        with open(self.log_file, "a") as f:
+            f.write(line + "\n")
+
+
 def should_stop_ddp(stop_on_rank0: bool, device) -> bool:
     """rank0의 stop 여부를 전체 rank에 broadcast."""
     if not is_ddp():
@@ -236,15 +251,7 @@ def train_ebm_only(cfg: dict, device: torch.device, resume_path: str = None):
     if is_main():
         out_dir.mkdir(parents=True, exist_ok=True)
 
-    _log_file = out_dir / "train.log"
-
-    def _log(msg: str):
-        if not is_main():
-            return
-        line = f"[{datetime.now().strftime('%H:%M:%S')}] {msg}"
-        print(line, flush=True)
-        with open(_log_file, "a") as f:
-            f.write(line + "\n")
+    _log = ExperimentLogger(out_dir / "train.log").log
 
     global_step = 0
 
@@ -366,15 +373,7 @@ def train_supervised(cfg: dict, device: torch.device, resume_path: str = None):
     if is_main():
         out_dir.mkdir(parents=True, exist_ok=True)
 
-    _log_file = out_dir / "train.log"
-
-    def _log(msg: str):
-        if not is_main():
-            return
-        line = f"[{datetime.now().strftime('%H:%M:%S')}] {msg}"
-        print(line, flush=True)
-        with open(_log_file, "a") as f:
-            f.write(line + "\n")
+    _log = ExperimentLogger(out_dir / "train.log").log
 
     global_step = 0
 
@@ -512,19 +511,8 @@ def train_irl(cfg: dict, device: torch.device, resume_path: str = None):
     if is_main():
         out_dir.mkdir(parents=True, exist_ok=True)
 
-    _log_file = out_dir / "train.log"
     total_epochs = cfg["training"]["epochs"]
-
-    def _ts() -> str:
-        return datetime.now().strftime("%H:%M:%S")
-
-    def _log(msg: str):
-        if not is_main():
-            return
-        line = f"[{_ts()}] {msg}"
-        print(line, flush=True)
-        with open(_log_file, "a") as f:
-            f.write(line + "\n")
+    _log = ExperimentLogger(out_dir / "train.log").log
 
     def _fmt_step(ep: int, step: int, m: dict) -> str:
         # loss 그룹
