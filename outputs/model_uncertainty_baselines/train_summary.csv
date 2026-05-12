@@ -1,0 +1,4 @@
+seed,best_epoch,best_val_auc,ckpt_path
+1,50,0.756511746680286,outputs/model_uncertainty_baselines/seed1/ckpt_best.pt
+2,23,0.7502553626149132,outputs/model_uncertainty_baselines/seed2/ckpt_best.pt
+3,39,0.7866445352400409,outputs/model_uncertainty_baselines/seed3/ckpt_best.pt

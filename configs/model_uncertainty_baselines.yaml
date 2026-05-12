@@ -1,0 +1,44 @@
+# Experiment block 1:
+# Standard model uncertainty vs. clinical ambiguity.
+#
+# Goal:
+#   Show whether standard malignancy-classification uncertainty scores recover
+#   high expert-disagreement cases measured by LIDC malignancy_var.
+#
+# Full run:
+#   python scripts/uncertainty_baselines.py --config configs/model_uncertainty_baselines.yaml
+#
+# CPU/debug run:
+#   python scripts/uncertainty_baselines.py --config configs/model_uncertainty_baselines.yaml \
+#       --device cpu --epochs 1 --max-train-batches 1 --max-eval-batches 1 --base-ch 4 --mc-samples 2
+
+experiment:
+  name: model_uncertainty_baselines
+  description: "Malignancy classifier uncertainty vs. expert disagreement"
+
+data:
+  splits_dir: data/splits
+  patch_size: 48
+  batch_size: 32
+  num_workers: 4
+
+model:
+  base_ch: 16
+  dropout: 0.2
+
+training:
+  seeds: [1, 2, 3]
+  epochs: 80
+  lr: 1.0e-4
+  weight_decay: 1.0e-5
+  grad_clip: 1.0
+  early_stop_patience: 15
+  malignancy_threshold: 3.0
+
+evaluation:
+  mc_samples: 20
+  high_disagreement_quantile: 0.75
+  topk_fractions: [0.05, 0.10, 0.20]
+
+logging:
+  output_dir: outputs/model_uncertainty_baselines

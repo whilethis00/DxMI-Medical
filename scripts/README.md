@@ -14,6 +14,7 @@ Executable entrypoints are intentionally kept directly under `scripts/` so exist
 ## Evaluation
 
 - `eval_test.py`: one-time test evaluation for best-val checkpoints
+- `uncertainty_baselines.py`: malignancy-classifier uncertainty baselines for model uncertainty vs. clinical ambiguity
 - `eval_v3.sh`: v1/v2/v3 comparison
 - `eval_v3_3seed.sh`: v3 3-seed test evaluation
 - `reeval_checkpoints.py`: historical checkpoint reevaluation
