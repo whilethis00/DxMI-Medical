@@ -49,7 +49,7 @@ def load_ebm(ckpt_path: Path, base_ch: int, device: torch.device) -> EBM:
     return model
 
 
-def eval_one(cfg_path: str, ckpt_path: str | None, device: torch.device):
+def eval_one(cfg_path: str, ckpt_path: str | None, device: torch.device, num_workers: int | None = None):
     with open(cfg_path) as f:
         cfg = yaml.safe_load(f)
 
@@ -79,7 +79,7 @@ def eval_one(cfg_path: str, ckpt_path: str | None, device: torch.device):
         test_ds,
         batch_size=cfg["data"]["batch_size"],
         shuffle=False,
-        num_workers=cfg["data"]["num_workers"],
+        num_workers=cfg["data"]["num_workers"] if num_workers is None else num_workers,
         pin_memory=True,
     )
 
@@ -96,6 +96,8 @@ def main():
     parser.add_argument("--ckpt",   nargs="*", default=None,
                         help="checkpoint 경로. config 수와 같거나 생략 (ckpt_best_val.pt 자동 탐색)")
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--num-workers", type=int, default=None,
+                        help="DataLoader worker override. Use 0 in restricted containers.")
     args = parser.parse_args()
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
@@ -106,7 +108,7 @@ def main():
 
     results = []
     for cfg_path, ckpt_path in zip(args.config, ckpts):
-        r = eval_one(cfg_path, ckpt_path, device)
+        r = eval_one(cfg_path, ckpt_path, device, num_workers=args.num_workers)
         if r is not None:
             results.append(r)
 

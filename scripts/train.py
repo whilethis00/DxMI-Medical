@@ -254,6 +254,7 @@ def train_ebm_only(cfg: dict, device: torch.device, resume_path: str = None):
     _log = ExperimentLogger(out_dir / "train.log").log
 
     global_step = 0
+    best_val_rho = -float("inf")
 
     for epoch in range(start_epoch, total_epochs):
         if is_ddp():
@@ -318,6 +319,18 @@ def train_ebm_only(cfg: dict, device: torch.device, resume_path: str = None):
                     )
                     if stopper is not None:
                         _log(f"  best so far: ρ={stopper.best:.4f} @ ep{stopper.best_epoch}")
+                    if val_result.rho > best_val_rho:
+                        best_val_rho = val_result.rho
+                        save_checkpoint(
+                            {
+                                "epoch":     epoch,
+                                "model":     raw_ebm.state_dict(),
+                                "opt":       opt.state_dict(),
+                                "scheduler": scheduler.state_dict(),
+                            },
+                            out_dir / "ckpt_best_val.pt",
+                        )
+                        _log(f"  best ckpt saved → ckpt_best_val.pt")
                 save_checkpoint(
                     {
                         "epoch":     epoch,

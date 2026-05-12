@@ -6,6 +6,7 @@ Executable entrypoints are intentionally kept directly under `scripts/` so exist
 
 - `train.py`: main training entrypoint
 - `run_train.sh`: local ablation launcher
+- `run_supervised_reward.sh`: block-2 supervised variance-regression baseline launcher
 - `run_train_pbs.sh`: PBS launcher
 - `run_repro.sh`: repeated seed launcher
 - `run_sweep.sh`: collapse sweep launcher

@@ -1,0 +1,1 @@
+[TEST] supervised_reward | ckpt=ckpt_epoch0080.pt | N=178 | Spearman rho=0.2083 (p=0.0053, PASS) | AUROC(-E)=0.3539 | AUROC(E)=0.6461 | ECE=0.2318
