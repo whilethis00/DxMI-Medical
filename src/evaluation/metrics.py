@@ -3,7 +3,7 @@
 - ECE  (Expected Calibration Error): energy ↔ uncertainty 보정
 - AUROC: 악성/양성 분류 (malignancy_mean ≥ 3 = positive)
 - Spearman ρ: energy ↔ annotator disagreement (Var) 상관관계
-              Clinical 합격 조건: p < 0.05
+              Clinical 합격 조건: ρ > 0 and p < 0.05
 """
 
 import numpy as np
@@ -104,7 +104,7 @@ class EvalResult:
     n_samples: int
 
     def passed_clinical(self) -> bool:
-        return self.p_value < 0.05
+        return self.rho > 0 and self.p_value < 0.05
 
     def __str__(self) -> str:
         clinical = "PASS" if self.passed_clinical() else "FAIL"

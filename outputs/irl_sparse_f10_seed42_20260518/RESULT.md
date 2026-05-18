@@ -29,7 +29,7 @@ FM gate v3 — v1 + FM quality filter (fm_e<0 → SGLD fallback), energy_clamp �
 |-------|------------|--------------|---------|----------|-----|---|--------|
 | best val | ep15 | 0.1897 | 0.0114 | 0.6230 | 0.7940 | 177 | PASS |
 | final val | ep30 | 0.1391 | 0.0649 | 0.6380 | 0.7354 | 177 | FAIL |
-| test | ckpt_best_val.pt | -0.1491 | 0.0470 | 0.4559 | 0.8115 | 178 | PASS |
+| test | ckpt_best_val.pt | -0.1491 | 0.0470 | 0.4559 | 0.8115 | 178 | FAIL |
 
 ### Val 전체 로그
 
@@ -68,7 +68,7 @@ FM gate v3 — v1 + FM quality filter (fm_e<0 → SGLD fallback), energy_clamp �
 
 **최종 val**: ep30, rho=0.1391, p=0.0649, AUROC(E)=0.6380, ECE=0.7354, FAIL
 
-**Test**: ckpt=ckpt_best_val.pt, rho=-0.1491, p=0.0470, AUROC(E)=0.4559, ECE=0.8115, PASS
+**Test**: ckpt=ckpt_best_val.pt, rho=-0.1491, p=0.0470, AUROC(E)=0.4559, ECE=0.8115, FAIL
 
 ## 가설 달성 여부
 
