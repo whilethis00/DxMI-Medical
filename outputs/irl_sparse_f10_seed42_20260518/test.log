@@ -1,0 +1,1 @@
+[TEST] irl_sparse_f10_seed42 | ckpt=ckpt_best_val.pt | N=178 | Spearman ρ=-0.1491 (p=0.0470, PASS) | AUROC(-E)=0.5441 | AUROC(E)=0.4559 | ECE=0.8115
